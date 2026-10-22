@@ -16,14 +16,14 @@ export function MobileNav({ categories }: { categories: CategoryWithChildren[] }
       <button
         type="button"
         aria-label="Open menu"
-        className="flex h-10 w-10 items-center justify-center rounded-md text-charcoal md:hidden"
+        className="flex h-10 w-10 items-center justify-center rounded-md text-charcoal xl:hidden"
         onClick={() => setOpen(true)}
       >
         <Menu className="h-5 w-5" />
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
+        <div className="fixed inset-0 z-50 flex xl:hidden">
           <div className="flex-1 bg-charcoal/40" onClick={() => setOpen(false)} aria-hidden="true" />
           <div className="h-full w-[86%] max-w-sm overflow-y-auto bg-ivory p-5 shadow-xl">
             <div className="mb-6 flex items-center justify-between">

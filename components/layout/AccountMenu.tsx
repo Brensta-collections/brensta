@@ -11,14 +11,31 @@ export function AccountMenu() {
   const menuId = useId();
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  // Set when the menu is opened via keyboard (ArrowDown / Enter / Space); on
+  // mouse-hover opens the trigger keeps focus and we must not steal it.
+  const openedByKeyboard = useRef(false);
 
-  // Close on Escape and restore focus to the trigger. Also close on outside click.
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         setOpen(false);
         triggerRef.current?.focus();
+        return;
+      }
+      if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+        const items = Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+        if (!items.length) return;
+        const active = document.activeElement as HTMLElement | null;
+        const idx = items.findIndex((el) => el === active);
+        let next = idx;
+        if (e.key === "ArrowDown") next = idx < 0 ? 0 : (idx + 1) % items.length;
+        else if (e.key === "ArrowUp") next = idx <= 0 ? items.length - 1 : idx - 1;
+        else if (e.key === "Home") next = 0;
+        else if (e.key === "End") next = items.length - 1;
+        e.preventDefault();
+        items[next]?.focus();
       }
     }
     function onClick(e: MouseEvent) {
@@ -30,6 +47,15 @@ export function AccountMenu() {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onClick);
     };
+  }, [open]);
+
+  // When the menu is opened via keyboard, move focus to the first item so
+  // ArrowUp/ArrowDown cycling works immediately without an extra Tab.
+  useEffect(() => {
+    if (!open || !openedByKeyboard.current) return;
+    openedByKeyboard.current = false;
+    const first = menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
+    first?.focus();
   }, [open]);
 
   if (status === "loading") {
@@ -46,6 +72,23 @@ export function AccountMenu() {
 
   const firstName = session.user.name?.split(" ")[0] ?? "You";
 
+  function onTriggerKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
+    // ArrowDown opens and jumps into the menu. Enter/Space let the button's
+    // native click toggle open — we detect that in onClick via detail === 0.
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      openedByKeyboard.current = true;
+      setOpen(true);
+    }
+  }
+
+  function onTriggerClick(e: React.MouseEvent<HTMLButtonElement>) {
+    // e.detail === 0 for keyboard-initiated clicks (Enter / Space). We flag
+    // this so the useEffect above moves focus into the menu.
+    if (e.detail === 0) openedByKeyboard.current = true;
+    setOpen((o) => !o);
+  }
+
   return (
     <div ref={containerRef} className="relative hidden md:block" onMouseLeave={() => setOpen(false)}>
       <button
@@ -56,14 +99,23 @@ export function AccountMenu() {
         aria-expanded={open}
         aria-controls={menuId}
         className="flex h-10 items-center gap-1 rounded-md px-2 text-charcoal hover:text-gold-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-        onClick={() => setOpen((o) => !o)}
+        onClick={onTriggerClick}
+        onKeyDown={onTriggerKeyDown}
         onMouseEnter={() => setOpen(true)}
       >
         <User className="h-5 w-5" aria-hidden="true" />
-        <span className="hidden text-sm font-medium lg:inline">Hi, {firstName}</span>
+        {/* Shown only at 2xl+ so the full desktop header (logo + mega menu +
+            search + account label + wishlist + cart) still fits at 1280px. */}
+        <span className="hidden text-sm font-medium 2xl:inline">Hi, {firstName}</span>
       </button>
       {open && (
-        <div id={menuId} role="menu" aria-label="Account" className="absolute right-0 top-full z-40 w-56 pt-2">
+        <div
+          id={menuId}
+          ref={menuRef}
+          role="menu"
+          aria-label="Account"
+          className="absolute right-0 top-full z-40 w-56 pt-2"
+        >
           <div className="rounded-xl border border-brand-line bg-ivory p-2 shadow-lg shadow-charcoal/5">
             <Link role="menuitem" href="/account" className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-charcoal hover:bg-champagne/50">
               <User className="h-4 w-4" aria-hidden="true" /> My Account

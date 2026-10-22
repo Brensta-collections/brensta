@@ -19,13 +19,16 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-brand-line bg-ivory/95 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 md:gap-4 md:px-6">
-        {/* Left — menu + logo */}
-        <div className="flex min-w-0 items-center gap-1 md:gap-4">
+        {/* Left — menu + logo. shrink-0 is load-bearing: without it the logo
+            was shrinking and overlapping the MegaMenu at ~1024–1279. */}
+        <div className="flex shrink-0 items-center gap-1 md:gap-4">
           <MobileNav categories={categories} />
           <Logo size="md" />
         </div>
 
-        {/* Center — mega menu (hidden until lg) */}
+        {/* Center — mega menu. Shown only at xl+ (≥1280). Below that we rely
+            on the hamburger (MobileNav) so the header never has to fit
+            logo + 5-item nav + full search + account label in one row. */}
         <MegaMenu categories={categories} />
 
         {/* Right — actions. Progressive reveal to avoid overflow at 768–1023 */}

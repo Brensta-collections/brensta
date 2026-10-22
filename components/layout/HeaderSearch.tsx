@@ -1,12 +1,27 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 export function HeaderSearch({ compact = false }: { compact?: boolean }) {
-  const [q, setQ] = useState("");
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // The URL "committed" query — only meaningful on /search.
+  const urlQ = pathname === "/search" ? (searchParams.get("q") ?? "") : "";
+
+  // Derived-state-reset pattern (React docs' "Adjusting state when a prop
+  // changes" idiom): when the committed URL q changes between renders we
+  // reset the local draft so the field reflects the active query. Prefer
+  // this over useEffect+setState, which the project's lint rule flags.
+  const [q, setQ] = useState<string>(urlQ);
+  const [lastUrlQ, setLastUrlQ] = useState<string>(urlQ);
+  if (urlQ !== lastUrlQ) {
+    setLastUrlQ(urlQ);
+    setQ(urlQ);
+  }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,7 +45,7 @@ export function HeaderSearch({ compact = false }: { compact?: boolean }) {
 
   return (
     <form onSubmit={submit} className="hidden items-center lg:flex">
-      <label className="flex h-10 w-64 items-center gap-2 rounded-full border border-brand-line bg-white px-4 text-sm text-charcoal transition focus-within:border-gold xl:w-72">
+      <label className="flex h-10 w-56 items-center gap-2 rounded-full border border-brand-line bg-white px-4 text-sm text-charcoal transition focus-within:border-gold xl:w-64">
         <Search className="h-4 w-4 text-brand-muted" />
         <input
           type="search"
