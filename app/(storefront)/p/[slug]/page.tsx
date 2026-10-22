@@ -138,9 +138,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-4 border-t border-brand-line pt-6 text-xs text-charcoal/80 sm:grid-cols-3">
-            <div className="flex items-center gap-2"><Truck className="h-4 w-4 text-gold-deep" /> Delivery 5–7 days</div>
-            <div className="flex items-center gap-2"><RotateCcw className="h-4 w-4 text-gold-deep" /> Easy 7-day return</div>
-            <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-gold-deep" /> Secure payments</div>
+            <Link href="/p/policies/shipping" className="flex items-center gap-2 hover:text-gold-deep">
+              <Truck className="h-4 w-4 text-gold-deep" /> Delivery across India
+            </Link>
+            <Link href="/p/policies/returns" className="flex items-center gap-2 hover:text-gold-deep">
+              <RotateCcw className="h-4 w-4 text-gold-deep" /> Returns per our policy
+            </Link>
+            <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-gold-deep" /> Secure checkout</div>
           </div>
         </div>
       </div>

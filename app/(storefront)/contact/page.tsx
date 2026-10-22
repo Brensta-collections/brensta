@@ -3,6 +3,7 @@ import { Mail, Phone, MessageCircle, MapPin } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ContactForm } from "./ContactForm";
+import { BUSINESS_EMAIL, BUSINESS_PHONE_DISPLAY, BUSINESS_PHONE_TEL, isPlaceholderContact } from "@/lib/business";
 
 // Root title template is "%s | BRENSTA" — avoid doubling the brand name.
 export const metadata: Metadata = {
@@ -24,19 +25,18 @@ async function getContactSettings() {
   };
 }
 
-function formatValue(v: string): { text: string; isPlaceholder: boolean } {
-  if (!v || /\[PLACEHOLDER\]/.test(v) || /^\+?91-?0{3,}/.test(v)) {
-    return { text: "[Placeholder — the owner will set this soon]", isPlaceholder: true };
-  }
-  return { text: v, isPlaceholder: false };
-}
-
 export default async function ContactPage() {
   const contact = await getContactSettings();
-  const email = formatValue(contact.email);
-  const phone = formatValue(contact.phone);
-  const whatsapp = formatValue(contact.whatsapp);
-  const address = formatValue(contact.address);
+
+  // Email + phone fall back to the owner-supplied constants when the DB still
+  // carries seeded placeholders. Address + WhatsApp have no owner-supplied
+  // fallback and simply disappear until the admin publishes them.
+  const email = isPlaceholderContact(contact.email) ? BUSINESS_EMAIL : contact.email;
+  const phoneDisplay = isPlaceholderContact(contact.phone) ? BUSINESS_PHONE_DISPLAY : contact.phone;
+  const phoneTel = isPlaceholderContact(contact.phone) ? BUSINESS_PHONE_TEL : contact.phone.replace(/[^\d+]/g, "");
+
+  const whatsapp = isPlaceholderContact(contact.whatsapp) ? null : contact.whatsapp;
+  const address = isPlaceholderContact(contact.address) ? null : contact.address;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 md:px-6">
@@ -44,20 +44,24 @@ export default async function ContactPage() {
       <header className="mt-4">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold-deep">We&apos;re here to help</p>
         <h1 className="brand-wordmark mt-3 text-3xl text-charcoal md:text-4xl">Contact BRENSTA</h1>
-        <p className="mt-2 text-sm text-brand-muted">We typically respond within one working day.</p>
+        <p className="mt-2 text-sm text-brand-muted">We aim to reply as soon as possible.</p>
       </header>
 
       <div className="mt-10 grid gap-10 md:grid-cols-[1fr_1fr]">
         {/* ───── Contact details ───── */}
         <section className="space-y-4">
-          <ContactLine icon={<Mail className="h-4 w-4" />} label="Email" value={email.text} isPlaceholder={email.isPlaceholder} />
-          <ContactLine icon={<Phone className="h-4 w-4" />} label="Phone" value={phone.text} isPlaceholder={phone.isPlaceholder} />
-          <ContactLine icon={<MessageCircle className="h-4 w-4" />} label="WhatsApp" value={whatsapp.text} isPlaceholder={whatsapp.isPlaceholder} />
-          <ContactLine icon={<MapPin className="h-4 w-4" />} label="Registered office" value={address.text} isPlaceholder={address.isPlaceholder} />
-
-          <p className="rounded-lg border border-gold/30 bg-gold/10 p-3 text-[11px] text-charcoal/80">
-            This is a development build. Business contact details above are placeholders until the owner publishes them from the admin settings.
-          </p>
+          <ContactLine icon={<Mail className="h-4 w-4" />} label="Email" value={email} href={`mailto:${email}`} />
+          <ContactLine icon={<Phone className="h-4 w-4" />} label="Phone" value={phoneDisplay} href={`tel:${phoneTel}`} />
+          {whatsapp && (
+            <ContactLine icon={<MessageCircle className="h-4 w-4" />} label="WhatsApp" value={whatsapp} />
+          )}
+          {address ? (
+            <ContactLine icon={<MapPin className="h-4 w-4" />} label="Registered office" value={address} />
+          ) : (
+            <p className="rounded-lg border border-brand-line bg-white p-3 text-[11px] italic text-brand-muted">
+              Our registered office address will appear here once the business owner publishes it from the admin settings.
+            </p>
+          )}
         </section>
 
         {/* ───── Form ───── */}
@@ -71,13 +75,17 @@ export default async function ContactPage() {
   );
 }
 
-function ContactLine({ icon, label, value, isPlaceholder }: { icon: React.ReactNode; label: string; value: string; isPlaceholder: boolean }) {
+function ContactLine({ icon, label, value, href }: { icon: React.ReactNode; label: string; value: string; href?: string }) {
   return (
     <div className="flex items-start gap-3 rounded-lg border border-brand-line bg-white p-4">
       <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-champagne/60 text-gold-deep">{icon}</span>
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-muted">{label}</p>
-        <p className={`mt-0.5 text-sm ${isPlaceholder ? "italic text-brand-muted" : "text-charcoal"}`}>{value}</p>
+        {href ? (
+          <a href={href} className="mt-0.5 block text-sm text-charcoal hover:text-gold-deep">{value}</a>
+        ) : (
+          <p className="mt-0.5 text-sm text-charcoal">{value}</p>
+        )}
       </div>
     </div>
   );

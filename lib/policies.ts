@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { BUSINESS_EMAIL, BUSINESS_PHONE_DISPLAY } from "@/lib/business";
 
 export const POLICY_SLUGS = [
   "privacy", "terms", "shipping", "returns",
@@ -9,8 +10,10 @@ export type PolicySlug = (typeof POLICY_SLUGS)[number];
 
 /**
  * Draft templates loaded only when the DB has no body text yet.
- * [PLACEHOLDER] markers highlight business-specific values the owner must confirm
- * and legal counsel should review before publishing.
+ * [PLACEHOLDER] markers highlight business-specific values the owner must
+ * confirm and legal counsel should review before publishing. Items that have
+ * been confirmed by the owner (contact email, contact phone) are inlined
+ * from @/lib/business.
  */
 const DRAFT_BODIES: Record<PolicySlug, { title: string; body: string }> = {
   privacy: {
@@ -20,7 +23,7 @@ const DRAFT_BODIES: Record<PolicySlug, { title: string; body: string }> = {
 This is a **draft policy** prepared for BRENSTA — a women's fashion and lifestyle store operating in India. **[PLACEHOLDER — have this reviewed by qualified legal counsel before publishing.]**
 
 ## 1. Who we are
-BRENSTA is operated by _[PLACEHOLDER — legal entity name]_ (hereafter "we", "us"), registered at _[PLACEHOLDER — registered business address]_. You can reach us at _[PLACEHOLDER — contact email]_ or _[PLACEHOLDER — contact phone]_.
+BRENSTA is operated by _[PLACEHOLDER — legal entity name]_ (hereafter "we", "us"), registered at _[PLACEHOLDER — registered business address]_. You can reach us at ${BUSINESS_EMAIL} or ${BUSINESS_PHONE_DISPLAY}.
 
 ## 2. What we collect
 When you shop with us we collect:
@@ -41,7 +44,7 @@ When you shop with us we collect:
 We do **not** sell your data.
 
 ## 5. Your rights
-Under Indian data-protection law (DPDP Act 2023) you can request access to, correction of, or deletion of your personal data. Write to _[PLACEHOLDER — grievance email]_ and we will respond within _[PLACEHOLDER — SLA]_.
+Under Indian data-protection law (DPDP Act 2023) you can request access to, correction of, or deletion of your personal data. Write to ${BUSINESS_EMAIL} and we will respond within _[PLACEHOLDER — SLA, typically 30 days]_.
 
 ## 6. Security
 We use industry-standard encryption in transit and hashed passwords at rest. No system is ever perfectly secure; if we detect a breach that affects you, we will notify you promptly.
@@ -102,7 +105,7 @@ These Terms are governed by Indian law. Disputes will be resolved in the courts 
 - Earrings, intimate wear and items marked "final sale" are not eligible for return.
 - Refunds are issued to the original payment method within _[PLACEHOLDER — SLA]_ of the item reaching our warehouse.
 
-To request a return, visit your [My Orders](/account/orders) page or write to _[PLACEHOLDER — support email]_.
+To request a return, visit your [My Orders](/account/orders) page or write to ${BUSINESS_EMAIL}.
 `,
   },
   cancellation: {
@@ -132,8 +135,8 @@ Prices are shown in INR and are inclusive of applicable GST unless stated otherw
 Under the Consumer Protection (E-Commerce) Rules 2020, every e-commerce entity in India must appoint a grievance officer.
 
 **Grievance Officer:** _[PLACEHOLDER — name]_
-**Email:** _[PLACEHOLDER — grievance email]_
-**Phone:** _[PLACEHOLDER — grievance phone, business hours only]_
+**Email:** ${BUSINESS_EMAIL}
+**Phone:** ${BUSINESS_PHONE_DISPLAY}
 **Address:** _[PLACEHOLDER — registered business address]_
 
 We acknowledge every complaint within _[PLACEHOLDER — SLA, typically 48 hours]_ and aim to resolve it within _[PLACEHOLDER — SLA, typically 15–30 days]_.
@@ -145,7 +148,7 @@ We acknowledge every complaint within _[PLACEHOLDER — SLA, typically 48 hours]
 Browse our collections, add items to your cart and head to checkout. You can sign in or create an account at the checkout step.
 
 ## Where do you deliver?
-We deliver across India. Delivery is typically 5–7 working days from dispatch.
+We deliver across India. Dispatch times and expected delivery windows are listed in our [Shipping Policy](/p/policies/shipping) and will be finalised with our courier partners before launch.
 
 ## Is Cash on Delivery available?
 Yes, with a ₹40 handling fee, subject to pincode serviceability.
@@ -157,7 +160,7 @@ Once your order ships you'll find a tracking link in your [My Orders](/account/o
 See our [Returns & Refunds Policy](/p/policies/returns). _[PLACEHOLDER — confirm final window before publishing.]_
 
 ## How do I contact you?
-Write to _[PLACEHOLDER — contact email]_ or use the [Contact](/contact) page.
+Write to ${BUSINESS_EMAIL}, call ${BUSINESS_PHONE_DISPLAY}, or use the [Contact](/contact) page.
 `,
   },
   cookies: {
