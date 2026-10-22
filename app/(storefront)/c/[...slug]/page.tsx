@@ -4,6 +4,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getCategoryByPath, getBreadcrumbs, getCategoryAndDescendantIds } from "@/lib/categories";
 import { listProducts } from "@/lib/products";
+import { getWishlistProductIds } from "@/lib/wishlist";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ProductGrid } from "@/components/storefront/ProductGrid";
 import { SortSelect } from "@/components/storefront/SortSelect";
@@ -104,14 +105,17 @@ export default async function CategoryPage({
     productIdsFromAttrs = sets.length ? sets.reduce((a, b) => a.filter((x) => b.includes(x))) : [];
   }
 
-  const { items, total, pages } = await listProducts({
-    categoryIds,
-    sort: sort as "popularity" | "newest" | "price_asc" | "price_desc",
-    minPrice,
-    maxPrice,
-    page,
-    perPage: 24,
-  });
+  const [{ items, total, pages }, wishlistIds] = await Promise.all([
+    listProducts({
+      categoryIds,
+      sort: sort as "popularity" | "newest" | "price_asc" | "price_desc",
+      minPrice,
+      maxPrice,
+      page,
+      perPage: 24,
+    }),
+    getWishlistProductIds(),
+  ]);
   const filtered = productIdsFromAttrs ? items.filter((p) => productIdsFromAttrs!.includes(p.id)) : items;
 
   return (
@@ -148,7 +152,7 @@ export default async function CategoryPage({
       <div className="mt-8 grid gap-8 md:grid-cols-[220px_1fr]">
         <FilterSidebar attributes={sidebarAttributes} minPrice={sp.min as string | undefined} maxPrice={sp.max as string | undefined} />
         <div>
-          <ProductGrid products={filtered} />
+          <ProductGrid products={filtered} inWishlistIds={wishlistIds} />
           <Pagination pathname={`/c${path}`} searchParams={sp} page={page} pages={pages} />
         </div>
       </div>

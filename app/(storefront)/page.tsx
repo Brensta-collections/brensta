@@ -8,14 +8,16 @@ import { HeroArtwork } from "@/components/storefront/HeroArtwork";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getMainCategoriesWithChildren } from "@/lib/categories";
 import { getFeaturedProducts, getNewArrivals } from "@/lib/products";
+import { getWishlistProductIds } from "@/lib/wishlist";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export default async function Home() {
-  const [categories, bestSellers, newArrivals] = await Promise.all([
+  const [categories, bestSellers, newArrivals, wishlistIds] = await Promise.all([
     getMainCategoriesWithChildren(),
     getFeaturedProducts(8),
     getNewArrivals(8),
+    getWishlistProductIds(),
   ]);
 
   const trustBar = [
@@ -118,7 +120,7 @@ export default async function Home() {
             </div>
             <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4 md:gap-6">
               {bestSellers.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard key={p.id} product={p} inWishlist={wishlistIds.has(p.id)} />
               ))}
             </div>
           </div>
@@ -136,7 +138,7 @@ export default async function Home() {
           </div>
           <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4 md:gap-6">
             {newArrivals.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} inWishlist={wishlistIds.has(p.id)} />
             ))}
           </div>
         </section>

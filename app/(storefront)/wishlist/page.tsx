@@ -48,7 +48,7 @@ export default async function WishlistPage() {
       </header>
       <div className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
         {items.map((w) => (
-          <ProductCard key={w.id} product={{ ...w.product, images: w.product.images, variants: w.product.variants }} />
+          <ProductCard key={w.id} product={{ ...w.product, images: w.product.images, variants: w.product.variants }} inWishlist />
         ))}
       </div>
     </div>

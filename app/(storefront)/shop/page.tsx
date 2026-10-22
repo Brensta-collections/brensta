@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { listProducts } from "@/lib/products";
+import { getWishlistProductIds } from "@/lib/wishlist";
 import { ProductGrid } from "@/components/storefront/ProductGrid";
 import { SortSelect } from "@/components/storefront/SortSelect";
 import { Pagination } from "@/components/storefront/Pagination";
@@ -10,7 +11,10 @@ export default async function ShopAllPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const sort = (sp.sort as string) ?? "popularity";
   const page = Math.max(1, Number(sp.page ?? 1));
-  const { items, total, pages } = await listProducts({ sort: sort as "popularity" | "newest" | "price_asc" | "price_desc", page, perPage: 24 });
+  const [{ items, total, pages }, wishlistIds] = await Promise.all([
+    listProducts({ sort: sort as "popularity" | "newest" | "price_asc" | "price_desc", page, perPage: 24 }),
+    getWishlistProductIds(),
+  ]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-6">
@@ -24,7 +28,7 @@ export default async function ShopAllPage({ searchParams }: { searchParams: Prom
       </div>
 
       <div className="mt-8">
-        <ProductGrid products={items} />
+        <ProductGrid products={items} inWishlistIds={wishlistIds} />
         <Pagination pathname="/shop" searchParams={sp} page={page} pages={pages} />
       </div>
     </div>

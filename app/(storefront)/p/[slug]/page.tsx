@@ -5,6 +5,7 @@ import { Truck, RotateCcw, ShieldCheck } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { getProductBySlug, getRelatedProducts } from "@/lib/products";
 import { productDisplayPrice, totalStock } from "@/lib/pricing";
+import { getWishlistProductIds } from "@/lib/wishlist";
 import { Badge } from "@/components/ui/Badge";
 import { Price } from "@/components/ui/Price";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -40,7 +41,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const stock = totalStock(product.variants);
   const primaryCat = product.categories.find((c) => c.isPrimary) ?? product.categories[0];
   const categoryIds = product.categories.map((c) => c.categoryId);
-  const related = await getRelatedProducts(product.id, categoryIds, 4);
+  const [related, wishlistIds] = await Promise.all([
+    getRelatedProducts(product.id, categoryIds, 4),
+    getWishlistProductIds(),
+  ]);
 
   const breadcrumbs = primaryCat
     ? [{ name: primaryCat.category.name, href: `/c${primaryCat.category.path}` }, { name: product.name }]
@@ -147,7 +151,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <h2 className="brand-wordmark text-2xl text-charcoal">You May Also Like</h2>
           <div className="mt-6 grid grid-cols-2 gap-5 md:grid-cols-4">
             {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} inWishlist={wishlistIds.has(p.id)} />
             ))}
           </div>
         </section>
