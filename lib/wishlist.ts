@@ -2,18 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
+import { getSessionUserId } from "@/lib/auth-helpers";
 
-/**
- * Wishlist requires an authenticated user.
- * M4 wires NextAuth; until then this returns a signal for UI to prompt sign-in.
- */
 export async function getCurrentUserId(): Promise<string | null> {
-  // TODO M4: pull from auth session
-  return null;
+  return getSessionUserId();
 }
 
 export async function toggleWishlist(productId: string) {
-  const userId = await getCurrentUserId();
+  const userId = await getSessionUserId();
   if (!userId) return { ok: false as const, error: "SIGNIN_REQUIRED" };
 
   const existing = await prisma.wishlist.findUnique({
@@ -26,6 +22,13 @@ export async function toggleWishlist(productId: string) {
   }
   revalidatePath("/wishlist");
   return { ok: true as const, added: !existing };
+}
+
+export async function removeFromWishlist(productId: string) {
+  const userId = await getSessionUserId();
+  if (!userId) return;
+  await prisma.wishlist.deleteMany({ where: { userId, productId } });
+  revalidatePath("/wishlist");
 }
 
 export async function getWishlist(userId: string) {

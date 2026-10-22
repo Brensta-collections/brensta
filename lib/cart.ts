@@ -3,14 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
 import { getOrCreateGuestToken, getGuestToken } from "@/lib/guest";
+import { getSessionUserId } from "@/lib/auth-helpers";
 import type { Prisma } from "@prisma/client";
 
-async function getOrCreateCart(ownerUserId?: string | null) {
-  if (ownerUserId) {
+async function getOrCreateCart() {
+  const userId = await getSessionUserId();
+  if (userId) {
     return prisma.cart.upsert({
-      where: { userId: ownerUserId },
+      where: { userId },
       update: {},
-      create: { userId: ownerUserId },
+      create: { userId },
     });
   }
   const token = await getOrCreateGuestToken();
@@ -22,10 +24,11 @@ async function getOrCreateCart(ownerUserId?: string | null) {
 }
 
 export async function getCart(ownerUserId?: string | null) {
-  const token = ownerUserId ? null : await getGuestToken();
-  if (!ownerUserId && !token) return null;
-  const cart = await prisma.cart.findFirst({
-    where: ownerUserId ? { userId: ownerUserId } : { guestToken: token! },
+  const userId = ownerUserId ?? (await getSessionUserId());
+  const token = userId ? null : await getGuestToken();
+  if (!userId && !token) return null;
+  return prisma.cart.findFirst({
+    where: userId ? { userId } : { guestToken: token! },
     include: {
       items: {
         include: {
@@ -36,7 +39,6 @@ export async function getCart(ownerUserId?: string | null) {
       },
     },
   });
-  return cart;
 }
 
 export async function addToCart(variantId: string, qty = 1) {
@@ -47,15 +49,20 @@ export async function addToCart(variantId: string, qty = 1) {
   if (!variant || !variant.isActive) {
     return { ok: false as const, error: "This item is no longer available." };
   }
-  if (variant.stock < qty) {
+
+  const cart = await getOrCreateCart();
+  const existing = await prisma.cartItem.findUnique({
+    where: { cartId_variantId: { cartId: cart.id, variantId: variant.id } },
+  });
+  const requested = (existing?.qty ?? 0) + qty;
+  if (variant.stock < requested) {
     return { ok: false as const, error: "Not enough stock available." };
   }
-  const cart = await getOrCreateCart();
-  const snapshot = (variant.salePrice ?? variant.price) as unknown as Prisma.Decimal;
 
+  const snapshot = (variant.salePrice ?? variant.price) as unknown as Prisma.Decimal;
   await prisma.cartItem.upsert({
     where: { cartId_variantId: { cartId: cart.id, variantId: variant.id } },
-    update: { qty: { increment: qty } },
+    update: { qty: requested },
     create: {
       cartId: cart.id,
       productId: variant.productId,
@@ -66,21 +73,37 @@ export async function addToCart(variantId: string, qty = 1) {
   });
 
   revalidatePath("/cart");
+  revalidatePath("/");
   return { ok: true as const };
 }
 
 export async function removeFromCart(cartItemId: string) {
-  await prisma.cartItem.delete({ where: { id: cartItemId } }).catch(() => null);
+  // ownership guard
+  const userId = await getSessionUserId();
+  const token = userId ? null : await getGuestToken();
+  const item = await prisma.cartItem.findUnique({
+    where: { id: cartItemId },
+    include: { cart: { select: { userId: true, guestToken: true } } },
+  });
+  if (!item) return;
+  if (userId ? item.cart.userId !== userId : item.cart.guestToken !== token) return;
+  await prisma.cartItem.delete({ where: { id: cartItemId } });
   revalidatePath("/cart");
 }
 
 export async function updateCartItemQty(cartItemId: string, qty: number) {
   if (qty <= 0) return removeFromCart(cartItemId);
+  const userId = await getSessionUserId();
+  const token = userId ? null : await getGuestToken();
   const item = await prisma.cartItem.findUnique({
     where: { id: cartItemId },
-    include: { variant: { select: { stock: true } } },
+    include: {
+      cart: { select: { userId: true, guestToken: true } },
+      variant: { select: { stock: true } },
+    },
   });
   if (!item) return;
+  if (userId ? item.cart.userId !== userId : item.cart.guestToken !== token) return;
   const safeQty = Math.min(qty, item.variant.stock);
   await prisma.cartItem.update({ where: { id: cartItemId }, data: { qty: safeQty } });
   revalidatePath("/cart");

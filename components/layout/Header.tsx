@@ -1,16 +1,19 @@
 import Link from "next/link";
-import { Heart, ShoppingBag, User } from "lucide-react";
+import { Heart, ShoppingBag } from "lucide-react";
 import { getMainCategoriesWithChildren } from "@/lib/categories";
 import { getCartCount } from "@/lib/cart";
+import { getSessionUserId } from "@/lib/auth-helpers";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
 import { MobileNav } from "./MobileNav";
 import { HeaderSearch } from "./HeaderSearch";
+import { AccountMenu } from "./AccountMenu";
 
 export async function Header() {
+  const userId = await getSessionUserId();
   const [categories, cartCount] = await Promise.all([
     getMainCategoriesWithChildren(),
-    getCartCount().catch(() => 0),
+    getCartCount(userId).catch(() => 0),
   ]);
 
   return (
@@ -26,13 +29,7 @@ export async function Header() {
         <div className="flex items-center gap-1 md:gap-3">
           <HeaderSearch />
           <HeaderSearch compact />
-          <Link
-            href="/account"
-            aria-label="Account"
-            className="hidden h-10 w-10 items-center justify-center rounded-md text-charcoal hover:text-gold-deep md:flex"
-          >
-            <User className="h-5 w-5" />
-          </Link>
+          <AccountMenu />
           <Link
             href="/wishlist"
             aria-label="Wishlist"

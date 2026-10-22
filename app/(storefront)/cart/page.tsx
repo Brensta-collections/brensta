@@ -76,12 +76,12 @@ export default async function CartPage() {
             </div>
           </dl>
           <Link href="/checkout" className="mt-6 block">
-            <Button variant="gold" size="lg" className="w-full" disabled>
+            <Button variant="gold" size="lg" className="w-full">
               Proceed to Checkout
             </Button>
           </Link>
           <p className="mt-2 text-center text-[11px] text-brand-muted">
-            Checkout opens in Milestone 4 (auth + address + order creation).
+            You&apos;ll be asked to sign in if you haven&apos;t already.
           </p>
           <Link href="/shop" className="mt-4 block text-center text-xs font-semibold uppercase tracking-wider text-gold-deep hover:text-charcoal">
             ← Continue shopping
