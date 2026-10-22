@@ -22,9 +22,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const path = toPath(slug);
   const cat = await prisma.category.findUnique({ where: { path }, select: { name: true, seoTitle: true, seoDescription: true } });
   if (!cat) return { title: "Not found" };
+  const rawTitle = cat.seoTitle ?? cat.name;
+  // If the configured seoTitle already contains "BRENSTA", bypass the "%s | BRENSTA"
+  // template so the brand doesn't appear twice.
+  const title = /brensta/i.test(rawTitle) ? { absolute: rawTitle } : rawTitle;
   return {
-    title: cat.seoTitle ?? cat.name,
+    title,
     description: cat.seoDescription ?? `Shop ${cat.name} at BRENSTA — premium women's fashion & lifestyle.`,
+    alternates: { canonical: `/c${path}` },
   };
 }
 

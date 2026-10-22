@@ -20,12 +20,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const p = await prisma.product.findUnique({ where: { slug }, select: { name: true, seoTitle: true, seoDescription: true, shortDescription: true } });
   if (!p) return { title: "Not found" };
+  const rawTitle = p.seoTitle ?? p.name;
+  // Some seeded products store seoTitle as "<name> | BRENSTA" already. The root template
+  // then produces "… | BRENSTA | BRENSTA". When the raw title already carries the brand
+  // name, bypass the template with { absolute: … }. Open Graph has no template so it
+  // can safely use the raw string either way.
+  const title = /brensta/i.test(rawTitle) ? { absolute: rawTitle } : rawTitle;
   return {
-    title: p.seoTitle ?? p.name,
+    title,
     description: p.seoDescription ?? p.shortDescription ?? undefined,
     alternates: { canonical: `/p/${slug}` },
     openGraph: {
-      title: p.seoTitle ?? p.name,
+      title: rawTitle,
       description: p.seoDescription ?? p.shortDescription ?? undefined,
       type: "website",
     },

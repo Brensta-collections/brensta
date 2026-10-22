@@ -4,8 +4,9 @@ import { prisma } from "@/lib/db";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ContactForm } from "./ContactForm";
 
+// Root title template is "%s | BRENSTA" — avoid doubling the brand name.
 export const metadata: Metadata = {
-  title: "Contact BRENSTA",
+  title: "Contact",
   description: "Reach the BRENSTA team — support, press and partnership queries.",
   alternates: { canonical: "/contact" },
 };

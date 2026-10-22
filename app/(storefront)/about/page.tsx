@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 
+// The root title template is "%s | BRENSTA" — so a bare "About" renders as
+// "About | BRENSTA" without doubling the brand name.
 export const metadata: Metadata = {
-  title: "About BRENSTA",
+  title: "About",
   description: "BRENSTA — a premium women's fashion and lifestyle store. Jewellery, clothing, bags, accessories and footwear curated for everyday elegance.",
   alternates: { canonical: "/about" },
 };

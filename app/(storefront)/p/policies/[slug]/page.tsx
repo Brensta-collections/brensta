@@ -13,11 +13,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   if (!(POLICY_SLUGS as readonly string[]).includes(slug)) return { title: "Policy not found" };
   const p = await getPolicy(slug as PolicySlug);
+  // Intentionally do NOT force `robots: { index: true }` here. The root layout sets
+  // environment-aware robots (noindex in dev, index in production). Policy pages
+  // should inherit that so a dev build never leaks indexed pages into search.
   return {
     title: p.title,
     description: `${p.title} — BRENSTA. Draft content; please verify business-specific details.`,
     alternates: { canonical: `/p/policies/${slug}` },
-    robots: { index: true, follow: true },
   };
 }
 

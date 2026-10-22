@@ -5,7 +5,10 @@ import { ProductGrid } from "@/components/storefront/ProductGrid";
 import { SortSelect } from "@/components/storefront/SortSelect";
 import { Pagination } from "@/components/storefront/Pagination";
 
-export const metadata: Metadata = { title: "Shop All" };
+export const metadata: Metadata = {
+  title: "Shop All",
+  alternates: { canonical: "/shop" },
+};
 
 export default async function ShopAllPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
