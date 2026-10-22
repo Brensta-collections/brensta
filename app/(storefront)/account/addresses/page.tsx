@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { listAddresses } from "@/lib/addresses";
-import { Button } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/LinkButton";
 import { AddressActions } from "./AddressActions";
 import { EmptyState } from "@/components/ui/EmptyState";
 
@@ -14,9 +13,7 @@ export default async function AddressesPage() {
           <h2 className="brand-wordmark text-xl text-charcoal">My Addresses</h2>
           <p className="mt-1 text-sm text-brand-muted">Saved addresses are used at checkout.</p>
         </div>
-        <Link href="/account/addresses/new">
-          <Button variant="outline" size="sm"><Plus className="h-4 w-4" /> Add address</Button>
-        </Link>
+        <LinkButton href="/account/addresses/new" variant="outline" size="sm"><Plus className="h-4 w-4" /> Add address</LinkButton>
       </div>
 
       <div className="mt-6">

@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { getMyOrder } from "@/lib/orders";
 import { formatINR } from "@/lib/utils";
-import { Button } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/LinkButton";
 
 export default async function OrderSuccessPage({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
@@ -47,12 +46,8 @@ export default async function OrderSuccessPage({ params }: { params: Promise<{ n
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href={`/account/orders/${order.number}`}>
-            <Button variant="primary">View order</Button>
-          </Link>
-          <Link href="/shop">
-            <Button variant="outline">Continue shopping</Button>
-          </Link>
+          <LinkButton href={`/account/orders/${order.number}`} variant="primary">View order</LinkButton>
+          <LinkButton href="/shop" variant="outline">Continue shopping</LinkButton>
         </div>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { getSessionUserId } from "@/lib/auth-helpers";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CartLineItem } from "@/components/cart/CartLineItem";
 import { CouponPanel } from "@/components/cart/CouponPanel";
-import { Button } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/LinkButton";
 import { formatINR } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -150,11 +150,9 @@ export default async function CartPage() {
               Previously applied coupon &quot;{cart.couponCode}&quot; is no longer valid: {couponInvalidReason}
             </p>
           )}
-          <Link href="/checkout" className={`mt-6 block ${checkoutDisabled ? "pointer-events-none" : ""}`} aria-disabled={checkoutDisabled}>
-            <Button variant="gold" size="lg" className="w-full" disabled={checkoutDisabled}>
-              Proceed to Checkout
-            </Button>
-          </Link>
+          <LinkButton href="/checkout" variant="gold" size="lg" className="mt-6 w-full" disabled={checkoutDisabled}>
+            Proceed to Checkout
+          </LinkButton>
           <p className="mt-2 text-center text-[11px] text-brand-muted">
             {checkoutDisabled
               ? "Remove unavailable items to continue."

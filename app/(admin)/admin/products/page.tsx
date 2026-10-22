@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { listAdminProducts } from "@/lib/admin/products";
-import { Button } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/LinkButton";
 import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
 import { Badge } from "@/components/ui/Badge";
 import { Price } from "@/components/ui/Price";
@@ -31,8 +31,8 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
   return (
     <div className="space-y-5">
       <AdminPageHeader title="Products" subtitle={`${total} total`}>
-        <Link href="/admin/products/import"><Button variant="outline" size="sm">Import / Export</Button></Link>
-        <Link href="/admin/products/new"><Button variant="primary" size="sm"><Plus className="h-4 w-4" /> Add product</Button></Link>
+        <LinkButton href="/admin/products/import" variant="outline" size="sm">Import / Export</LinkButton>
+        <LinkButton href="/admin/products/new" variant="primary" size="sm"><Plus className="h-4 w-4" /> Add product</LinkButton>
       </AdminPageHeader>
 
       <ProductFilters q={q} status={status} stock={stock} categoryId={categoryId} categories={categoryOptions} />

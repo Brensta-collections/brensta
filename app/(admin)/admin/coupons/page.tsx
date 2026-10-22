@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
-import { Button } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/LinkButton";
 import { listCoupons } from "@/lib/admin/coupons";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CouponRow } from "./CouponRow";
@@ -14,7 +13,7 @@ export default async function CouponsPage() {
   return (
     <div className="space-y-5">
       <AdminPageHeader title="Coupons" subtitle={`${coupons.length} total`}>
-        <Link href="/admin/coupons/new"><Button variant="primary" size="sm"><Plus className="h-4 w-4" /> Add coupon</Button></Link>
+        <LinkButton href="/admin/coupons/new" variant="primary" size="sm"><Plus className="h-4 w-4" /> Add coupon</LinkButton>
       </AdminPageHeader>
       {coupons.length === 0 ? (
         <EmptyState title="No coupons yet" cta={{ label: "Create a coupon", href: "/admin/coupons/new" }} />

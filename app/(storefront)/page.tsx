@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ShieldCheck, Sparkles, Truck, RotateCcw } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { LinkButton } from "@/components/ui/LinkButton";
 import { CategoryCard } from "@/components/ui/CategoryCard";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
@@ -63,12 +63,8 @@ export default async function Home() {
               Elegant · Trendy · Timeless. A premium destination for women&apos;s jewellery, clothing, bags, accessories and footwear.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link href="/shop">
-                <Button variant="primary" size="lg">Shop All</Button>
-              </Link>
-              <Link href="/c/clothing">
-                <Button variant="outline" size="lg">Explore Clothing</Button>
-              </Link>
+              <LinkButton href="/shop" variant="primary" size="lg">Shop All</LinkButton>
+              <LinkButton href="/c/clothing" variant="outline" size="lg">Explore Clothing</LinkButton>
             </div>
           </div>
           <HeroArtwork className="order-1 h-[420px] md:order-2 md:h-[520px]" />
@@ -154,9 +150,7 @@ export default async function Home() {
               BRENSTA brings together refined craftsmanship and contemporary design — thoughtfully priced pieces for every day,
               every occasion, every you.
             </p>
-            <Link href="/about" className="mt-6 inline-block">
-              <Button variant="outline">Read more</Button>
-            </Link>
+            <LinkButton href="/about" variant="outline" className="mt-6 inline-block">Read more</LinkButton>
           </div>
           <div className="overflow-hidden rounded-2xl">
             <PlaceholderImage seed="story-brensta" label="BRENSTA" aspect="portrait" className="h-[360px]" />
