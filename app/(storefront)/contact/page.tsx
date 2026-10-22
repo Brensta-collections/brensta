@@ -55,12 +55,8 @@ export default async function ContactPage() {
           {whatsapp && (
             <ContactLine icon={<MessageCircle className="h-4 w-4" />} label="WhatsApp" value={whatsapp} />
           )}
-          {address ? (
+          {address && (
             <ContactLine icon={<MapPin className="h-4 w-4" />} label="Registered office" value={address} />
-          ) : (
-            <p className="rounded-lg border border-brand-line bg-white p-3 text-[11px] italic text-brand-muted">
-              Our registered office address will appear here once the business owner publishes it from the admin settings.
-            </p>
           )}
         </section>
 

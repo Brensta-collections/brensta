@@ -52,7 +52,23 @@ describe("Contact page wires the fallbacks", () => {
   it("does NOT fabricate a WhatsApp number or address — those render only when the admin publishes a non-placeholder value", () => {
     expect(src).toMatch(/isPlaceholderContact\(contact\.whatsapp\) \? null : contact\.whatsapp/);
     expect(src).toMatch(/isPlaceholderContact\(contact\.address\) \? null : contact\.address/);
-    expect(src).toMatch(/registered office address will appear here once the business owner publishes it/i);
+  });
+  it("does not leak the internal 'business owner publishes it from the admin settings' setup message to customers when the address is unavailable", () => {
+    // The Chrome-extension audit caught this: an earlier version rendered an
+    // internal setup instruction in place of the address card. The entire
+    // address row must disappear instead — matching the WhatsApp pattern on
+    // the line above.
+    expect(src).not.toContain("will appear here once the business owner publishes it");
+    expect(src).not.toContain("publishes it from the admin settings");
+    // The address card renders iff `address` is truthy — no `? … : …`
+    // fallback ever substitutes a message for the missing value.
+    expect(src).toMatch(/\{address && \(/);
+    expect(src).not.toMatch(/\{address \?[\s\S]*?:[\s\S]*?Registered office/);
+  });
+  it("a configured address still renders through the ContactLine component", () => {
+    // The ContactLine for the registered office is reached only when
+    // `address` is truthy — a non-placeholder value from the DB.
+    expect(src).toMatch(/label="Registered office" value=\{address\}/);
   });
   it("drops the unsupported one-working-day response SLA", () => {
     expect(src).not.toContain("respond within one working day");
