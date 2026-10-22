@@ -55,9 +55,13 @@ describe("Header layout — logo/nav overlap at 1280px", () => {
 
   const mobile = read("components/layout/MobileNav.tsx");
   it("mobile hamburger is visible through lg (xl:hidden), not just below md", () => {
-    // Trigger + overlay should both use xl:hidden.
-    expect(mobile).toMatch(/className="flex h-10 w-10 items-center justify-center rounded-md text-charcoal xl:hidden"/);
-    expect(mobile).toMatch(/className="fixed inset-0 z-50 flex xl:hidden"/);
+    // Trigger + overlay should both use xl:hidden. The exact class order
+    // may vary with a11y additions; what matters is that neither falls back
+    // to md:hidden (which would hide the hamburger between md and xl).
+    expect(mobile).toMatch(/aria-label="Open menu"[\s\S]{0,500}xl:hidden/);
+    // Drawer overlay is also xl:hidden — xl:hidden appears on the className
+    // just above the role="dialog" attribute.
+    expect(mobile).toMatch(/xl:hidden[\s\S]{0,400}role="dialog"/);
     expect(mobile).not.toMatch(/md:hidden/);
   });
 
