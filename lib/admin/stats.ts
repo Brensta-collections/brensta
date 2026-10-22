@@ -1,6 +1,10 @@
 import { prisma } from "@/lib/db";
+import { assertAdmin } from "@/lib/admin/rbac";
 
 export async function getAdminStats() {
+  // Defence-in-depth: layout and page both call requireAdmin(), but keep this
+  // function safe to import from anywhere without the caller remembering to guard.
+  await assertAdmin();
   const now = new Date();
   const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
