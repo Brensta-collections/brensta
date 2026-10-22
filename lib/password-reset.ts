@@ -1,5 +1,7 @@
 import { randomBytes, createHash } from "node:crypto";
 import { prisma } from "@/lib/db";
+import { getEmailProvider, isRealEmailConfigured } from "@/lib/email";
+import { passwordResetEmail } from "@/lib/email/templates/password-reset";
 
 export const RESET_TTL_MINUTES = 30;
 
@@ -36,16 +38,21 @@ export async function consumeResetToken(rawToken: string): Promise<string | null
 }
 
 /**
- * Logs the reset link to the server console in dev when no email provider is configured.
- * Spec: never claim password-reset email delivery works unless a real provider is in place.
+ * Deliver the reset link via the configured EmailProvider.
+ * ConsoleEmailProvider (dev default) logs the link to stdout — never claims delivery to the user.
+ * ResendEmailProvider (prod with RESEND_API_KEY) actually sends.
+ *
+ * Never throws — failures are logged and reported.
  */
-export function logResetDevOnly(email: string, token: string) {
+export async function deliverResetEmail(email: string, token: string): Promise<{ delivered: boolean; providerName: string }> {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const link = `${base}/reset-password?token=${token}`;
-  console.log(
-    "\n============================================================\n" +
-      `[DEV] Password reset link for ${email}:\n  ${link}\n` +
-      `(valid ${RESET_TTL_MINUTES} min — this message prints only because RESEND_API_KEY is empty)\n` +
-      "============================================================\n"
-  );
+  const provider = getEmailProvider();
+  const message = passwordResetEmail({ to: email, link, validMinutes: RESET_TTL_MINUTES });
+  const result = await provider.send(message);
+  const delivered = result.ok && isRealEmailConfigured();
+  if (!result.ok) {
+    console.error(`[password-reset] email send failed via ${provider.name}: ${result.reason}`);
+  }
+  return { delivered, providerName: provider.name };
 }

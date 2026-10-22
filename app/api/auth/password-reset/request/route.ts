@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { forgotSchema } from "@/lib/validators/auth";
-import { createResetToken, logResetDevOnly } from "@/lib/password-reset";
+import { createResetToken, deliverResetEmail } from "@/lib/password-reset";
 import { rateLimit, ipFromRequest } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   const ip = ipFromRequest(req);
   const rl = rateLimit(`pwreset:${ip}`, 5, 60 * 15);
   if (!rl.allowed) {
-    return NextResponse.json({ ok: true }); // always return 200 for anti-enumeration
+    // Still 200 — anti-enumeration. The rate limiter blocks noise regardless.
+    return NextResponse.json({ ok: true });
   }
 
   let body: unknown;
@@ -21,15 +22,12 @@ export async function POST(req: Request) {
 
   const token = await createResetToken(parsed.data.email);
   if (token) {
-    if (process.env.RESEND_API_KEY) {
-      // Real email delivery arrives in M7 (Resend). Until then, no silent "sent" claims.
-      // Deliberately not sending from here yet so we never falsely imply delivery.
-      logResetDevOnly(parsed.data.email, token);
-    } else {
-      logResetDevOnly(parsed.data.email, token);
-    }
+    // Delivery failure must not change the user-visible response (anti-enumeration).
+    await deliverResetEmail(parsed.data.email, token).catch((e) => {
+      console.error("[password-reset] deliverResetEmail threw", e);
+    });
   }
 
-  // Always return the same shape regardless of whether the account exists
+  // Always return the same shape regardless of whether the account exists.
   return NextResponse.json({ ok: true });
 }

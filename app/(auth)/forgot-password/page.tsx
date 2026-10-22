@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { ForgotForm } from "./ForgotForm";
+import { isRealEmailConfigured } from "@/lib/email";
 
 export const metadata: Metadata = { title: "Forgot password" };
 
 export default function ForgotPage() {
-  const emailProviderConfigured = !!process.env.RESEND_API_KEY;
+  // Only claim delivery when a real provider is actually wired.
+  const emailProviderConfigured = isRealEmailConfigured();
   return (
     <AuthShell
       title="Reset your password"
