@@ -15,7 +15,8 @@ for (const path of [".env", ".env.local"]) {
     for (const line of txt.split("\n")) {
       const m = line.match(/^\s*(\w+)\s*=\s*(.*)\s*$/);
       if (!m) continue;
-      let [, k, v] = m;
+      const k = m[1];
+      let v = m[2];
       if (process.env[k]) continue;
       v = v.replace(/^"(.*)"$/, "$1");
       process.env[k] = v;

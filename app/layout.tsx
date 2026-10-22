@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { AuthSessionProvider } from "@/components/auth/SessionProvider";
 import "./globals.css";
 
@@ -38,11 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-ivory text-charcoal">
-        <AuthSessionProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </AuthSessionProvider>
+        <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>
     </html>
   );
