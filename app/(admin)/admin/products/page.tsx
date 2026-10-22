@@ -37,7 +37,10 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
 
       <ProductFilters q={q} status={status} stock={stock} categoryId={categoryId} categories={categoryOptions} />
 
-      <div className="overflow-hidden rounded-xl border border-brand-line bg-white">
+      {/* overflow-x-auto turns the table into a deliberate horizontal-scroll
+          region on narrow viewports instead of clipping cells or pushing the
+          page's siblings off-screen. */}
+      <div className="overflow-x-auto rounded-xl border border-brand-line bg-white">
         <table className="min-w-full divide-y divide-brand-line">
           <thead className="bg-ivory">
             <tr className="text-left text-[11px] font-semibold uppercase tracking-wider text-brand-muted">
