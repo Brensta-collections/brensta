@@ -5,6 +5,8 @@ import { getSessionUserId } from "@/lib/auth-helpers";
 import { getCart } from "@/lib/cart";
 import { computeTotals } from "@/lib/shipping";
 import { checkoutSchema, type CheckoutInput } from "@/lib/validators/checkout";
+import { evaluateCartCoupon } from "@/lib/coupons";
+import { CUSTOMER_CANCELLABLE_STATUSES } from "@/lib/order-status";
 import { revalidatePath } from "next/cache";
 import type { Prisma } from "@prisma/client";
 
@@ -67,7 +69,10 @@ export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult
     const unit = Number(v.salePrice ?? v.price);
     subtotal += unit * item.qty;
   }
-  const totals = computeTotals(subtotal, parsed.data.paymentMethod);
+  // Server-side coupon re-validation (returns null if cart has no coupon or it's no longer valid)
+  const couponResult = await evaluateCartCoupon(userId);
+  const discount = couponResult?.discount ?? 0;
+  const totals = computeTotals(Math.max(0, subtotal - discount), parsed.data.paymentMethod);
   const expectedPaise = Math.round(totals.total * 100);
   // If the client-sent expected total disagrees, reject (prevents stale prices)
   if (parsed.data.expectedTotalPaise !== expectedPaise) {
@@ -108,11 +113,12 @@ export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult
           phone: address.phone,
           status: "PENDING",
           subtotal,
-          discount: 0,
+          discount,
           shipping: totals.shipping - totals.codFee,
           tax: 0,
           total: totals.total,
           currency: "INR",
+          couponCode: couponResult?.code ?? null,
           shippingAddress: {
             name: address.name,
             phone: address.phone,
@@ -194,6 +200,18 @@ export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult
         },
       });
 
+      // Record coupon redemption (idempotency key on the order protects against double submit)
+      if (couponResult) {
+        await tx.couponRedemption.create({
+          data: {
+            couponId: couponResult.couponId,
+            userId,
+            orderId: order.id,
+            amount: discount,
+          },
+        });
+      }
+
       // Clear cart
       await tx.cartItem.deleteMany({ where: { cartId: freshCart.id } });
       await tx.cart.update({ where: { id: freshCart.id }, data: { couponCode: null } });
@@ -239,3 +257,92 @@ export async function getMyOrder(number: string) {
   if (!order || order.userId !== userId) return null;
   return order;
 }
+
+export type CancelResult =
+  | { ok: true; status: "CANCELLED" }
+  | { ok: false; error: string };
+
+/**
+ * Customer-initiated cancellation.
+ * - Validates ownership + allowed status.
+ * - Atomically transitions status, restores stock, writes StockLedger + OrderStatusHistory,
+ *   and marks any COD payment FAILED (never captured for COD until delivery).
+ * - Idempotent: re-calling on an already-cancelled order returns the current state as ok.
+ * - Protected against concurrent fulfilment by an `updateMany` on the PENDING/CONFIRMED status.
+ */
+export async function cancelMyOrder(number: string, reason?: string): Promise<CancelResult> {
+  const userId = await getSessionUserId();
+  if (!userId) return { ok: false, error: "Please sign in." };
+
+  const order = await prisma.order.findUnique({
+    where: { number },
+    include: { items: true, payments: true },
+  });
+  if (!order || order.userId !== userId) return { ok: false, error: "Order not found." };
+  if (order.status === "CANCELLED") return { ok: true, status: "CANCELLED" }; // idempotent
+  if (!(CUSTOMER_CANCELLABLE_STATUSES as readonly string[]).includes(order.status)) {
+    return { ok: false, error: `Order can no longer be cancelled from status ${order.status}.` };
+  }
+
+  const trimmedReason = (reason ?? "").trim().slice(0, 400) || "Customer cancellation";
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Atomic transition — if admin shipped it between our read and here, this returns count=0.
+      const upd = await tx.order.updateMany({
+        where: { id: order.id, status: { in: ["PENDING", "CONFIRMED"] } },
+        data: { status: "CANCELLED" },
+      });
+      if (upd.count === 0) throw new Error("STATUS_CHANGED");
+
+      // Restore stock + ledger
+      for (const item of order.items) {
+        await tx.productVariant.update({
+          where: { id: item.variantId },
+          data: { stock: { increment: item.qty } },
+        });
+        await tx.stockLedger.create({
+          data: {
+            variantId: item.variantId,
+            delta: item.qty,
+            reason: "cancellation",
+            orderId: order.id,
+            userId,
+            note: `Customer cancelled ${order.number}`,
+          },
+        });
+      }
+
+      // Mark CREATED COD payments as FAILED. Online payments require real refund via provider (M6).
+      for (const p of order.payments) {
+        if (p.provider === "COD" && p.status === "CREATED") {
+          await tx.payment.update({ where: { id: p.id }, data: { status: "FAILED" } });
+        }
+      }
+
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          fromStatus: order.status,
+          toStatus: "CANCELLED",
+          byUserId: userId,
+          reason: trimmedReason,
+        },
+      });
+    });
+  } catch (e) {
+    const msg = (e as Error).message;
+    if (msg === "STATUS_CHANGED") {
+      return { ok: false, error: "This order has moved past the cancellation window. Please contact support." };
+    }
+    console.error("[cancelMyOrder] failed", e);
+    return { ok: false, error: "Could not cancel. Please try again." };
+  }
+
+  revalidatePath("/account/orders");
+  revalidatePath(`/account/orders/${order.number}`);
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${order.number}`);
+  return { ok: true, status: "CANCELLED" };
+}
+

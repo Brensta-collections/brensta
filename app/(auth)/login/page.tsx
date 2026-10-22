@@ -3,10 +3,15 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { LoginForm } from "./LoginForm";
+import { sanitizeAccountNext } from "@/lib/safe-redirect";
 
 export const metadata: Metadata = { title: "Login" };
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const sp = await searchParams;
+  const rawNext = typeof sp.next === "string" ? sp.next : undefined;
+  const nextPath = sanitizeAccountNext(rawNext);
+  const registerHref = `/register?next=${encodeURIComponent(nextPath)}`;
   const googleEnabled = !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
 
   return (
@@ -16,7 +21,7 @@ export default function LoginPage() {
       footer={
         <>
           New to BRENSTA?{" "}
-          <Link href="/register" className="font-semibold text-gold-deep underline-offset-4 hover:underline">
+          <Link href={registerHref} className="font-semibold text-gold-deep underline-offset-4 hover:underline">
             Create an account
           </Link>
         </>

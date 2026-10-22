@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { ShoppingBag, Heart } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { addToCart } from "@/lib/cart";
 import { toggleWishlist } from "@/lib/wishlist";
@@ -15,7 +14,6 @@ type Variant = {
 };
 
 export function ProductActions({ productId, variants, productName }: { productId: string; variants: Variant[]; productName: string }) {
-  const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(variants[0]?.id ?? null);
   const [rawQty, setRawQty] = useState(1);
   const [msg, setMsg] = useState<string | null>(null);
@@ -49,11 +47,11 @@ export function ProductActions({ productId, variants, productName }: { productId
   function onWishlist() {
     startTransition(async () => {
       const r = await toggleWishlist(productId);
-      if (!r.ok && r.error === "SIGNIN_REQUIRED") {
-        router.push("/login?next=/wishlist");
+      if (!r.ok) {
+        setMsg(r.error);
         return;
       }
-      if (r.ok) setMsg(r.added ? "Added to wishlist." : "Removed from wishlist.");
+      setMsg(r.added ? "Added to wishlist." : "Removed from wishlist.");
     });
   }
 

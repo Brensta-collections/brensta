@@ -100,6 +100,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       } catch (e) {
         console.error("[auth] cart merge failed", e);
       }
+      // Merge guest wishlist (if any) into the user's wishlist.
+      try {
+        const { mergeGuestWishlistIntoUser } = await import("@/lib/wishlist-merge");
+        await mergeGuestWishlistIntoUser(user.id);
+      } catch (e) {
+        console.error("[auth] wishlist merge failed", e);
+      }
     },
   },
 });

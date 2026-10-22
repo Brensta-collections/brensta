@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { FormField, inputCls } from "@/components/auth/FormField";
 import { INDIAN_STATES } from "@/lib/validators/address";
 import { createAddress, updateAddress } from "@/lib/addresses";
+import { sanitizeNext } from "@/lib/safe-redirect";
 
 type Values = {
   id?: string;
@@ -22,6 +23,10 @@ type Values = {
 
 export function AddressForm({ initial, onSavedHref = "/account/addresses" }: { initial?: Partial<Values>; onSavedHref?: string }) {
   const router = useRouter();
+  const params = useSearchParams();
+  // When this form is reached via "Add new address" during checkout the URL carries ?next=/checkout.
+  // Validate before using so an attacker cannot send the user off-site after save.
+  const savedHref = sanitizeNext(params.get("next"), onSavedHref);
   const [v, setV] = useState<Values>({
     id: initial?.id,
     label: initial?.label ?? "",
@@ -54,7 +59,7 @@ export function AddressForm({ initial, onSavedHref = "/account/addresses" }: { i
       };
       const r = v.id ? await updateAddress(v.id, payload) : await createAddress(payload);
       if (!r.ok) return setErr(r.error);
-      router.push(onSavedHref);
+      router.push(savedHref);
       router.refresh();
     });
   }

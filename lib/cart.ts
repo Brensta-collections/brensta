@@ -32,7 +32,12 @@ export async function getCart(ownerUserId?: string | null) {
     include: {
       items: {
         include: {
-          product: { include: { images: { take: 1, orderBy: { sortOrder: "asc" } } } },
+          product: {
+            include: {
+              images: { take: 1, orderBy: { sortOrder: "asc" } },
+              categories: { select: { categoryId: true } },
+            },
+          },
           variant: true,
         },
         orderBy: { createdAt: "asc" },
@@ -42,11 +47,17 @@ export async function getCart(ownerUserId?: string | null) {
 }
 
 export async function addToCart(variantId: string, qty = 1) {
+  if (!Number.isFinite(qty) || qty < 1) {
+    return { ok: false as const, error: "Invalid quantity." };
+  }
   const variant = await prisma.productVariant.findUnique({
     where: { id: variantId },
-    select: { id: true, productId: true, price: true, salePrice: true, stock: true, isActive: true },
+    select: {
+      id: true, productId: true, price: true, salePrice: true, stock: true, isActive: true,
+      product: { select: { status: true } },
+    },
   });
-  if (!variant || !variant.isActive) {
+  if (!variant || !variant.isActive || variant.product.status !== "PUBLISHED") {
     return { ok: false as const, error: "This item is no longer available." };
   }
 
@@ -56,7 +67,12 @@ export async function addToCart(variantId: string, qty = 1) {
   });
   const requested = (existing?.qty ?? 0) + qty;
   if (variant.stock < requested) {
-    return { ok: false as const, error: "Not enough stock available." };
+    return {
+      ok: false as const,
+      error: existing
+        ? `You already have ${existing.qty} in your cart; only ${variant.stock} available in total.`
+        : `Only ${variant.stock} available.`,
+    };
   }
 
   const snapshot = (variant.salePrice ?? variant.price) as unknown as Prisma.Decimal;

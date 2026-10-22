@@ -16,14 +16,17 @@ type Item = {
   variantOptionLabel: string;
   stock: number;
   imageUrl: string | null;
+  notice?: string | null;
+  unavailable?: boolean;
 };
 
 export function CartLineItem({ item }: { item: Item }) {
   const [pending, startTransition] = useTransition();
   const isPlaceholder = !item.imageUrl || item.imageUrl.startsWith("placeholder:");
+  const dim = item.unavailable;
 
   return (
-    <li className="flex items-start gap-4 border-b border-brand-line py-5">
+    <li className={`flex items-start gap-4 border-b border-brand-line py-5 ${dim ? "opacity-70" : ""}`}>
       <Link href={`/p/${item.productSlug}`} className="h-20 w-20 shrink-0 overflow-hidden rounded border border-brand-line bg-champagne/30 md:h-24 md:w-24">
         {isPlaceholder ? (
           <PlaceholderImage seed={item.productSlug} label={item.productName} aspect="square" />
@@ -39,25 +42,34 @@ export function CartLineItem({ item }: { item: Item }) {
         {item.variantOptionLabel && (
           <p className="mt-0.5 text-xs text-brand-muted">{item.variantOptionLabel}</p>
         )}
+        {item.notice && (
+          <p className={`mt-1 text-[11px] ${item.unavailable ? "text-warm-brown" : "text-gold-deep"}`} role="status">
+            {item.notice}
+          </p>
+        )}
         <div className="mt-2 flex items-center justify-between gap-3">
-          <div className="inline-flex items-center rounded-full border border-brand-line bg-white">
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => startTransition(() => updateCartItemQty(item.id, item.qty - 1))}
-              aria-label="Decrease"
-              className="h-9 w-9 text-charcoal disabled:opacity-50"
-            >−</button>
-            <span className="w-8 text-center text-sm font-medium">{item.qty}</span>
-            <button
-              type="button"
-              disabled={pending || item.qty >= item.stock}
-              onClick={() => startTransition(() => updateCartItemQty(item.id, item.qty + 1))}
-              aria-label="Increase"
-              className="h-9 w-9 text-charcoal disabled:opacity-50"
-            >+</button>
-          </div>
-          <Price price={item.snapshotPrice * item.qty} size="sm" />
+          {item.unavailable ? (
+            <span className="rounded-full border border-brand-line bg-ivory px-3 py-1 text-[11px] font-semibold uppercase text-brand-muted">Unavailable</span>
+          ) : (
+            <div className="inline-flex items-center rounded-full border border-brand-line bg-white">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => startTransition(() => updateCartItemQty(item.id, item.qty - 1))}
+                aria-label="Decrease"
+                className="h-9 w-9 text-charcoal disabled:opacity-50"
+              >−</button>
+              <span className="w-8 text-center text-sm font-medium">{item.qty}</span>
+              <button
+                type="button"
+                disabled={pending || item.qty >= item.stock}
+                onClick={() => startTransition(() => updateCartItemQty(item.id, item.qty + 1))}
+                aria-label="Increase"
+                className="h-9 w-9 text-charcoal disabled:opacity-50"
+              >+</button>
+            </div>
+          )}
+          <Price price={item.unavailable ? 0 : item.snapshotPrice * item.qty} size="sm" />
         </div>
       </div>
       <button

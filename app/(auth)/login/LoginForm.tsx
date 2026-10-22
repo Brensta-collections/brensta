@@ -7,11 +7,13 @@ import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { FormField, inputCls } from "@/components/auth/FormField";
 import { loginSchema } from "@/lib/validators/auth";
+import { sanitizeAccountNext } from "@/lib/safe-redirect";
 
 export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
   const params = useSearchParams();
-  const nextPath = params.get("next") ?? "/account";
+  // Open-redirect safe: only accept internal paths beginning with `/`.
+  const nextPath = sanitizeAccountNext(params.get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

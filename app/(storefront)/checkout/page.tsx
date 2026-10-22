@@ -5,10 +5,14 @@ import { requireUser } from "@/lib/auth-helpers";
 import { getCart } from "@/lib/cart";
 import { listAddresses } from "@/lib/addresses";
 import { computeTotals, getShippingConfig } from "@/lib/shipping";
+import { evaluateCoupon } from "@/lib/coupon-eval";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CheckoutClient } from "./CheckoutClient";
 
-export const metadata: Metadata = { title: "Checkout" };
+export const metadata: Metadata = {
+  title: "Checkout",
+  robots: { index: false, follow: false },
+};
 
 export default async function CheckoutPage() {
   const user = await requireUser();
@@ -22,20 +26,37 @@ export default async function CheckoutPage() {
     );
   }
 
-  const subtotal = cart.items.reduce((s, i) => s + Number(i.snapshotPrice) * i.qty, 0);
+  // Use live variant prices to compute an authoritative subtotal.
+  const subtotal = cart.items.reduce((s, i) => {
+    if (!i.variant.isActive) return s;
+    const unit = Number(i.variant.salePrice ?? i.variant.price);
+    return s + unit * Math.min(i.qty, i.variant.stock);
+  }, 0);
   const cfg = getShippingConfig();
+
+  // Re-validate any applied coupon.
+  let appliedCode: string | null = null;
+  let appliedDiscount = 0;
+  if (cart.couponCode && subtotal > 0) {
+    const cartCategoryIds = Array.from(new Set(cart.items.flatMap((i) => i.product.categories.map((c) => c.categoryId))));
+    const r = await evaluateCoupon({ code: cart.couponCode, subtotal, cartCategoryIds, userId: user.id });
+    if (r.ok) {
+      appliedCode = r.code;
+      appliedDiscount = r.discount;
+    }
+  }
 
   const items = cart.items.map((i) => ({
     id: i.id,
     name: i.product.name,
     slug: i.product.slug,
-    qty: i.qty,
-    unitPrice: Number(i.snapshotPrice),
+    qty: Math.min(i.qty, i.variant.stock),
+    unitPrice: Number(i.variant.salePrice ?? i.variant.price),
     optionValues: i.variant.optionValues as Record<string, string>,
     image: i.product.images[0]?.url ?? null,
     stock: i.variant.stock,
   }));
-  const totalsCOD = computeTotals(subtotal, "COD");
+  const totalsCOD = computeTotals(Math.max(0, subtotal - appliedDiscount), "COD");
 
   const addrs = addresses.map((a) => ({
     id: a.id,
@@ -65,6 +86,8 @@ export default async function CheckoutPage() {
         addresses={addrs}
         items={items}
         subtotal={subtotal}
+        couponCode={appliedCode}
+        couponDiscount={appliedDiscount}
         shippingFlat={cfg.shipping}
         shippingThreshold={cfg.freeShippingThreshold}
         codFee={cfg.codFee}

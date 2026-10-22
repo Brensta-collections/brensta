@@ -39,6 +39,8 @@ export function CheckoutClient(props: {
   addresses: Address[];
   items: Item[];
   subtotal: number;
+  couponCode: string | null;
+  couponDiscount: number;
   shippingFlat: number;
   shippingThreshold: number;
   codFee: number;
@@ -54,9 +56,10 @@ export function CheckoutClient(props: {
   const [err, setErr] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const shipping = props.subtotal >= props.shippingThreshold ? 0 : props.shippingFlat;
+  const subtotalAfterCoupon = Math.max(0, props.subtotal - props.couponDiscount);
+  const shipping = subtotalAfterCoupon >= props.shippingThreshold ? 0 : props.shippingFlat;
   const codFee = paymentMethod === "COD" ? props.codFee : 0;
-  const total = props.subtotal + shipping + codFee;
+  const total = subtotalAfterCoupon + shipping + codFee;
   const expectedTotalPaise = useMemo(() => Math.round(total * 100), [total]);
 
   const selectedAddr = props.addresses.find((a) => a.id === addressId);
@@ -193,6 +196,15 @@ export function CheckoutClient(props: {
         <h2 className="brand-wordmark text-xl text-charcoal">Order Summary</h2>
         <dl className="mt-5 space-y-3 text-sm">
           <div className="flex justify-between"><dt className="text-brand-muted">Subtotal</dt><dd className="font-medium text-charcoal">{formatINR(props.subtotal)}</dd></div>
+          {props.couponDiscount > 0 && (
+            <div className="flex justify-between text-gold-deep">
+              <dt>Coupon {props.couponCode ? `(${props.couponCode})` : ""}</dt>
+              <dd className="font-medium">− {formatINR(props.couponDiscount)}</dd>
+            </div>
+          )}
+          <p className="rounded border border-brand-line bg-ivory px-2 py-1.5 text-[11px] text-brand-muted">
+            Pincode serviceability is confirmed by our courier at dispatch. If your address is not serviceable, we will contact you to arrange an alternative or a refund.
+          </p>
           <div className="flex justify-between">
             <dt className="text-brand-muted">Shipping</dt>
             <dd className="font-medium text-charcoal">{shipping === 0 ? "Free" : formatINR(shipping)}</dd>

@@ -388,14 +388,17 @@ model CartItem {
 
 model Wishlist {
   id         String   @id @default(cuid())
-  userId     String
+  userId     String?
+  guestToken String?
   productId  String
   createdAt  DateTime @default(now())
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
+  @@unique([guestToken, productId])
+  @@index([guestToken])
 }
 
 // ================================================================

@@ -2,14 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 import { FormField, inputCls } from "@/components/auth/FormField";
 import { registerSchema } from "@/lib/validators/auth";
+import { sanitizeAccountNext } from "@/lib/safe-redirect";
 
 export function RegisterForm() {
   const router = useRouter();
+  const params = useSearchParams();
+  // Honour the validated post-signup destination so users continue the flow they interrupted.
+  const nextPath = sanitizeAccountNext(params.get("next"));
   const [state, setState] = useState({ name: "", email: "", phone: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,10 +51,11 @@ export function RegisterForm() {
     });
     setLoading(false);
     if (!signInRes || signInRes.error) {
-      router.push("/login");
+      // Signup succeeded but auto-login failed; send the user to login carrying the intended destination.
+      router.push(`/login?next=${encodeURIComponent(nextPath)}`);
       return;
     }
-    router.push("/account");
+    router.push(nextPath);
     router.refresh();
   }
 
