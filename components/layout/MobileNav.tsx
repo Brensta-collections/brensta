@@ -235,10 +235,25 @@ export function MobileNav({ categories }: { categories: CategoryWithChildren[] }
                   <Link
                     href={`/c${sub.path}`}
                     onClick={closeDrawer}
-                    className="block rounded-lg px-4 py-2.5 text-sm text-charcoal hover:bg-champagne/50"
+                    className="block rounded-lg px-4 py-2.5 text-sm font-medium text-charcoal hover:bg-champagne/50"
                   >
                     {sub.name}
                   </Link>
+                  {sub.children && sub.children.length > 0 && (
+                    <ul className="ml-2 mt-0.5 space-y-0.5 border-l border-brand-line pl-3">
+                      {sub.children.map((gc) => (
+                        <li key={gc.id}>
+                          <Link
+                            href={`/c${gc.path}`}
+                            onClick={closeDrawer}
+                            className="block rounded-lg px-3 py-1.5 text-xs text-charcoal/80 hover:bg-champagne/50"
+                          >
+                            {gc.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>

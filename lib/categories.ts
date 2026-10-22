@@ -19,6 +19,16 @@ export async function getMainCategoriesWithChildren() {
         orderBy: { sortOrder: "asc" },
         include: {
           _count: { select: { products: true, children: true } },
+          // One extra level so the mega menu can offer 2-level navigation
+          // (e.g. Jewellery > Earrings > Studs). Deeper trees are still
+          // reachable from the category landing page's chip list.
+          children: {
+            where: { status: "PUBLISHED", showInMenu: true },
+            orderBy: { sortOrder: "asc" },
+            include: {
+              _count: { select: { products: true, children: true } },
+            },
+          },
         },
       },
       _count: { select: { products: true, children: true } },
@@ -45,7 +55,13 @@ export async function getMainCategoriesWithChildren() {
     .filter((r) => (descendantCountByRoot.get(r.id) ?? 0) > 0)
     .map((r) => ({
       ...r,
-      children: r.children.filter((c) => c._count.products > 0 || c._count.children > 0),
+      children: r.children
+        .filter((c) => c._count.products > 0 || c._count.children > 0)
+        .map((c) => ({
+          ...c,
+          // Hide grandchildren that have neither products nor great-grandchildren.
+          children: c.children.filter((gc) => gc._count.products > 0 || gc._count.children > 0),
+        })),
     }));
 }
 

@@ -78,6 +78,8 @@ export function MegaMenu({ categories }: { categories: CategoryWithChildren[] })
       {categories.map((c) => {
         const hasChildren = c.children.length > 0;
         const isOpen = openId === c.id;
+        // 2-level panel mode when any child has grandchildren.
+        const hasGrandchildren = c.children.some((sub) => sub.children && sub.children.length > 0);
         return (
           <div
             key={c.id}
@@ -107,7 +109,11 @@ export function MegaMenu({ categories }: { categories: CategoryWithChildren[] })
                 }}
                 role="menu"
                 aria-label={`${c.name} subcategories`}
-                className="absolute left-1/2 top-full z-50 w-[480px] -translate-x-1/2 pt-2"
+                className={
+                  hasGrandchildren
+                    ? "absolute left-1/2 top-full z-50 w-[720px] -translate-x-1/2 pt-2"
+                    : "absolute left-1/2 top-full z-50 w-[480px] -translate-x-1/2 pt-2"
+                }
                 onKeyDown={(e) => onPanelKeyDown(e, c.id)}
               >
                 <div className="rounded-xl border border-brand-line bg-ivory p-5 shadow-lg shadow-charcoal/5">
@@ -117,19 +123,50 @@ export function MegaMenu({ categories }: { categories: CategoryWithChildren[] })
                       View all →
                     </Link>
                   </div>
-                  <ul className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-                    {c.children.map((sub) => (
-                      <li key={sub.id}>
-                        <Link
-                          role="menuitem"
-                          href={`/c${sub.path}`}
-                          className="block rounded px-2 py-1 text-sm text-charcoal hover:bg-champagne/50 hover:text-gold-deep"
-                        >
-                          {sub.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
+                  {hasGrandchildren ? (
+                    <ul className="grid grid-cols-3 gap-x-6 gap-y-5">
+                      {c.children.map((sub) => (
+                        <li key={sub.id} className="min-w-0">
+                          <Link
+                            role="menuitem"
+                            href={`/c${sub.path}`}
+                            className="block rounded px-2 py-1 text-sm font-semibold text-charcoal hover:bg-champagne/50 hover:text-gold-deep"
+                          >
+                            {sub.name}
+                          </Link>
+                          {sub.children && sub.children.length > 0 && (
+                            <ul className="mt-1 space-y-0.5 border-l border-brand-line pl-2">
+                              {sub.children.map((gc) => (
+                                <li key={gc.id}>
+                                  <Link
+                                    role="menuitem"
+                                    href={`/c${gc.path}`}
+                                    className="block rounded px-2 py-0.5 text-xs text-charcoal/80 hover:bg-champagne/50 hover:text-gold-deep"
+                                  >
+                                    {gc.name}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <ul className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+                      {c.children.map((sub) => (
+                        <li key={sub.id}>
+                          <Link
+                            role="menuitem"
+                            href={`/c${sub.path}`}
+                            className="block rounded px-2 py-1 text-sm text-charcoal hover:bg-champagne/50 hover:text-gold-deep"
+                          >
+                            {sub.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </div>
             )}
