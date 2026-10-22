@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "tsx --env-file=.env prisma/seed.ts",
+    "db:seed:products": "tsx --env-file=.env prisma/seed-products.ts",
     "create:admin": "tsx --env-file=.env --env-file=.env.local scripts/create-admin.ts",
     "test": "vitest run",
     "test:watch": "vitest",
