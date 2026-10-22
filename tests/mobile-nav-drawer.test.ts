@@ -85,8 +85,19 @@ describe("MobileNav — keyboard + focus management", () => {
   });
 
   it("submenu Back returns focus to the category button that opened it", () => {
-    expect(src).toContain("submenuOpenerRef");
+    // The opener is remembered by id, not by DOM-node reference, because the
+    // main list is unmounted while the submenu is visible — a captured
+    // HTMLElement would be stale by the time closeSubmenu() tries to focus it.
+    expect(src).toContain("openerCategoryIdRef");
     expect(src).toMatch(/data-mobilenav-back="true"/);
+    // Each category button advertises its id so closeSubmenu() can find the
+    // freshly re-mounted node after the main list comes back.
+    expect(src).toMatch(/data-mobilenav-category=\{c\.id\}/);
+    // closeSubmenu() must look up the button by that attribute (CSS.escape so
+    // ids containing special chars don't produce an invalid selector).
+    expect(src).toMatch(/\[data-mobilenav-category="\$\{CSS\.escape\(openerId\)\}"\]/);
+    // The old brittle DOM-reference pattern must not creep back in.
+    expect(src).not.toMatch(/submenuOpenerRef/);
   });
 });
 
@@ -108,10 +119,19 @@ describe("MobileNav — session-aware navigation state", () => {
     expect(src).toMatch(/useSession\(\)/);
   });
 
-  it("renders Login only for signed-out visitors; signed-in users see My Account + Sign out", () => {
-    // Branch structure: signedIn ? ( …My Account… …Sign out… ) : ( …Login… )
-    expect(src).toMatch(/signedIn \? \([\s\S]+?My Account[\s\S]+?Sign out[\s\S]+?\) : \([\s\S]+?Login/);
+  it("renders a signed-out 'Sign in' link (not 'Login') and signed-in My Account + Sign out", () => {
+    // Branch structure: signedIn ? ( …My Account… …Sign out… ) : ( …Sign in… )
+    expect(src).toMatch(/signedIn \? \([\s\S]+?My Account[\s\S]+?Sign out[\s\S]+?\) : \([\s\S]+?Sign in/);
     expect(src).toMatch(/void signOut\(\{ callbackUrl: "\/" \}\)/);
+  });
+
+  it("uses the same 'Sign in' label as the signed-out header icon (aria-label='Sign in' in AccountMenu)", () => {
+    const account = read("components/layout/AccountMenu.tsx");
+    expect(account).toMatch(/aria-label="Sign in"/);
+    // Drawer's signed-out link text must match that aria-label verbatim.
+    expect(src).toMatch(/href="\/login"[^>]*>Sign in<\/Link>/);
+    // Old "Login" wording for this signed-out link must not come back.
+    expect(src).not.toMatch(/href="\/login"[^>]*>Login<\/Link>/);
   });
 
   it("hides sign-in CTA while the session is loading", () => {

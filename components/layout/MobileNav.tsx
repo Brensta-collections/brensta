@@ -18,8 +18,11 @@ export function MobileNav({ categories }: { categories: CategoryWithChildren[] }
 
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const drawerRef = useRef<HTMLDivElement | null>(null);
-  // Remember which category button opened the submenu so Back can restore focus to it.
-  const submenuOpenerRef = useRef<HTMLButtonElement | null>(null);
+  // Remember the category id that opened the submenu so Back can restore focus
+  // to the correct button. We store the id (not the DOM node) because the main
+  // list is unmounted while the submenu is visible — a captured HTMLElement
+  // would point at an orphaned node by the time we try to .focus() it.
+  const openerCategoryIdRef = useRef<string | null>(null);
 
   const drawerId = useId();
   const titleId = useId();
@@ -99,11 +102,11 @@ export function MobileNav({ categories }: { categories: CategoryWithChildren[] }
   function closeDrawer() {
     setOpen(false);
     setActiveId(null);
-    submenuOpenerRef.current = null;
+    openerCategoryIdRef.current = null;
   }
 
-  function openSubmenu(id: string, opener: HTMLButtonElement | null) {
-    submenuOpenerRef.current = opener;
+  function openSubmenu(id: string) {
+    openerCategoryIdRef.current = id;
     setActiveId(id);
     // Defer focus to next frame so the submenu has rendered.
     requestAnimationFrame(() => {
@@ -113,11 +116,16 @@ export function MobileNav({ categories }: { categories: CategoryWithChildren[] }
   }
 
   function closeSubmenu() {
-    const toFocus = submenuOpenerRef.current;
+    const openerId = openerCategoryIdRef.current;
+    openerCategoryIdRef.current = null;
     setActiveId(null);
-    submenuOpenerRef.current = null;
+    // Re-query the freshly mounted category button by data-attribute — a DOM
+    // reference captured before setActiveId(null) would be stale because the
+    // main list is remounted on this transition.
     requestAnimationFrame(() => {
-      toFocus?.focus();
+      if (!openerId) return;
+      const sel = `[data-mobilenav-category="${CSS.escape(openerId)}"]`;
+      drawerRef.current?.querySelector<HTMLElement>(sel)?.focus();
     });
   }
 
@@ -153,11 +161,10 @@ export function MobileNav({ categories }: { categories: CategoryWithChildren[] }
               <li key={c.id}>
                 <button
                   type="button"
+                  data-mobilenav-category={c.id}
                   className="flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-medium text-charcoal hover:bg-champagne/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-                  onClick={(e) =>
-                    c.children.length
-                      ? openSubmenu(c.id, e.currentTarget)
-                      : closeDrawer()
+                  onClick={() =>
+                    c.children.length ? openSubmenu(c.id) : closeDrawer()
                   }
                 >
                   <span>{c.name}</span>
@@ -186,7 +193,7 @@ export function MobileNav({ categories }: { categories: CategoryWithChildren[] }
                   </button>
                 </>
               ) : (
-                <Link href="/login" className="block px-4 py-2 text-sm" onClick={closeDrawer}>Login</Link>
+                <Link href="/login" className="block px-4 py-2 text-sm" onClick={closeDrawer}>Sign in</Link>
               )}
             </li>
           </ul>
