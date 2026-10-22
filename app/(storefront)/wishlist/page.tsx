@@ -4,6 +4,7 @@ import { Heart } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getCurrentUserId, getWishlist } from "@/lib/wishlist";
 import { ProductCard } from "@/components/ui/ProductCard";
+import { pluralize } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Wishlist",
@@ -18,6 +19,7 @@ export default async function WishlistPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 md:px-6">
         <EmptyState
+          as="h1"
           title="Your wishlist is empty"
           description={userId
             ? "Save pieces you love and come back later."
@@ -36,7 +38,7 @@ export default async function WishlistPage() {
         <div>
           <h1 className="brand-wordmark text-3xl text-charcoal md:text-4xl">Wishlist</h1>
           <p className="mt-1 text-xs text-brand-muted">
-            {items.length} item{items.length === 1 ? "" : "s"}
+            {pluralize(items.length, "item")}
             {!userId && " · saved in this browser"}
           </p>
         </div>

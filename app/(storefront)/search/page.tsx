@@ -5,6 +5,7 @@ import { ProductGrid } from "@/components/storefront/ProductGrid";
 import { SortSelect } from "@/components/storefront/SortSelect";
 import { Pagination } from "@/components/storefront/Pagination";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { pluralize } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Search" };
 
@@ -33,7 +34,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-gold-deep">Search</p>
           <h1 className="brand-wordmark mt-1 text-3xl text-charcoal md:text-4xl">“{q}”</h1>
-          <p className="mt-1 text-sm text-brand-muted">{total} result{total === 1 ? "" : "s"}</p>
+          <p className="mt-1 text-sm text-brand-muted">{pluralize(total, "result")}</p>
         </div>
         {total > 0 && <SortSelect current={sort} />}
       </div>

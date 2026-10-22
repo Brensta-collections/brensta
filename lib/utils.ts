@@ -22,3 +22,11 @@ export function slugify(input: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
 }
+
+/**
+ * English pluralization helper. Returns "1 item" / "2 items" by default.
+ * If `plural` isn't provided it defaults to `singular + "s"`.
+ */
+export function pluralize(n: number, singular: string, plural?: string): string {
+  return `${n} ${Math.abs(n) === 1 ? singular : plural ?? `${singular}s`}`;
+}

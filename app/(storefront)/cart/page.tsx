@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { CartLineItem } from "@/components/cart/CartLineItem";
 import { CouponPanel } from "@/components/cart/CouponPanel";
 import { LinkButton } from "@/components/ui/LinkButton";
-import { formatINR } from "@/lib/utils";
+import { formatINR, pluralize } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Your Cart",
@@ -22,6 +22,7 @@ export default async function CartPage() {
     return (
       <div className="mx-auto max-w-3xl px-4 py-16 md:px-6">
         <EmptyState
+          as="h1"
           title="Your cart is empty"
           description="Start exploring BRENSTA and add pieces you love."
           cta={{ label: "Shop All", href: "/shop" }}
@@ -71,11 +72,12 @@ export default async function CartPage() {
   const shipping = subtotalAfterCoupon === 0 ? 0 : subtotalAfterCoupon >= shippingThreshold ? 0 : shippingFlat;
   const total = subtotalAfterCoupon + shipping;
   const checkoutDisabled = subtotal === 0;
+  const totalItems = cart.items.reduce((s, i) => s + i.qty, 0);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 md:px-6">
       <h1 className="brand-wordmark text-3xl text-charcoal md:text-4xl">Your Cart</h1>
-      <p className="mt-1 text-sm text-brand-muted">{cart.items.reduce((s, i) => s + i.qty, 0)} items</p>
+      <p className="mt-1 text-sm text-brand-muted">{pluralize(totalItems, "item")}</p>
 
       {anyIssue && (
         <div className="mt-4 flex items-start gap-2 rounded-lg border border-gold/30 bg-gold/10 p-3 text-xs text-charcoal/90">
