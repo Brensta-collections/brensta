@@ -20,7 +20,7 @@ export function HeaderSearch({ compact = false }: { compact?: boolean }) {
       <button
         type="button"
         aria-label="Search"
-        className="flex h-10 w-10 items-center justify-center rounded-md text-charcoal hover:text-gold-deep"
+        className="flex h-10 w-10 items-center justify-center rounded-md text-charcoal hover:text-gold-deep lg:hidden"
         onClick={() => router.push("/search")}
       >
         <Search className="h-5 w-5" />
@@ -29,8 +29,8 @@ export function HeaderSearch({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <form onSubmit={submit} className="hidden items-center md:flex">
-      <label className="flex h-10 w-72 items-center gap-2 rounded-full border border-brand-line bg-white px-4 text-sm text-charcoal transition focus-within:border-gold">
+    <form onSubmit={submit} className="hidden items-center lg:flex">
+      <label className="flex h-10 w-64 items-center gap-2 rounded-full border border-brand-line bg-white px-4 text-sm text-charcoal transition focus-within:border-gold xl:w-72">
         <Search className="h-4 w-4 text-brand-muted" />
         <input
           type="search"

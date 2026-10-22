@@ -11,6 +11,9 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { ProductGallery } from "@/components/storefront/ProductGallery";
 import { ProductActions } from "@/components/cart/AddToCartButton";
+import { JsonLd } from "@/components/seo/JsonLd";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -19,6 +22,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: p.seoTitle ?? p.name,
     description: p.seoDescription ?? p.shortDescription ?? undefined,
+    alternates: { canonical: `/p/${slug}` },
+    openGraph: {
+      title: p.seoTitle ?? p.name,
+      description: p.seoDescription ?? p.shortDescription ?? undefined,
+      type: "website",
+    },
   };
 }
 
@@ -39,12 +48,46 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   const variantsForClient = product.variants.map((v) => ({
     id: v.id,
+    sku: v.sku,
     stock: v.stock,
     optionValues: v.optionValues as Record<string, string>,
   }));
+  const hasRealImage = product.images.some((i) => !i.url.startsWith("placeholder:"));
+
+  const canonicalUrl = `${SITE_URL}/p/${product.slug}`;
+  const productLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    sku: product.variants[0]?.sku,
+    brand: { "@type": "Brand", name: product.brand },
+    description: product.shortDescription ?? product.description ?? undefined,
+    url: canonicalUrl,
+    ...(hasRealImage
+      ? { image: product.images.filter((i) => !i.url.startsWith("placeholder:")).map((i) => (i.url.startsWith("/") ? SITE_URL + i.url : i.url)) }
+      : {}),
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "INR",
+      price: price.price,
+      availability: stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      url: canonicalUrl,
+    },
+  };
+  const crumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL + "/" },
+      ...(primaryCat ? [{ "@type": "ListItem" as const, position: 2, name: primaryCat.category.name, item: `${SITE_URL}/c${primaryCat.category.path}` }] : []),
+      { "@type": "ListItem", position: primaryCat ? 3 : 2, name: product.name, item: canonicalUrl },
+    ],
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+      <JsonLd data={productLd} />
+      <JsonLd data={crumbLd} />
       <Breadcrumbs items={breadcrumbs} />
       <div className="mt-6 grid gap-10 md:grid-cols-2 md:gap-14">
         <div>
@@ -53,7 +96,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         <div>
           <div className="flex items-center gap-2">
-            <Badge variant="demo">DEMO</Badge>
+            {!hasRealImage && <Badge variant="demo">DEMO</Badge>}
             {price.onSale && <Badge variant="sale">Sale</Badge>}
             {product.isNewArrival && <Badge variant="new">New</Badge>}
             {stock === 0 && <Badge variant="soldout">Sold Out</Badge>}

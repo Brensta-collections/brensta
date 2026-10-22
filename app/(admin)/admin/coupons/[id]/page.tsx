@@ -2,8 +2,11 @@ import { notFound } from "next/navigation";
 import { AdminPageHeader, Crumb } from "@/components/admin/AdminPageHeader";
 import { CouponForm } from "@/components/admin/CouponForm";
 import { getCouponForEdit } from "@/lib/admin/coupons";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function EditCouponPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
+
   const { id } = await params;
   const c = await getCouponForEdit(id);
   if (!c) notFound();

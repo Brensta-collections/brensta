@@ -2,8 +2,11 @@ import Link from "next/link";
 import { AlertTriangle, ArrowRight, Package, ShoppingBag, Users, IndianRupee } from "lucide-react";
 import { getAdminStats } from "@/lib/admin/stats";
 import { formatINR } from "@/lib/utils";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function AdminDashboard() {
+  await requireAdmin();
+
   const s = await getAdminStats();
   return (
     <div className="space-y-6">

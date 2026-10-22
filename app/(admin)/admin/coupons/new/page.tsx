@@ -1,7 +1,10 @@
 import { AdminPageHeader, Crumb } from "@/components/admin/AdminPageHeader";
 import { CouponForm } from "@/components/admin/CouponForm";
+import { requireAdmin } from "@/lib/admin/rbac";
 
-export default function NewCouponPage() {
+export default async function NewCouponPage() {
+  await requireAdmin();
+
   return (
     <div className="space-y-5">
       <div>

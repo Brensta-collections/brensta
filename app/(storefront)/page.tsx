@@ -4,8 +4,12 @@ import { Button } from "@/components/ui/Button";
 import { CategoryCard } from "@/components/ui/CategoryCard";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
+import { HeroArtwork } from "@/components/storefront/HeroArtwork";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { getMainCategoriesWithChildren } from "@/lib/categories";
 import { getFeaturedProducts, getNewArrivals } from "@/lib/products";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export default async function Home() {
   const [categories, bestSellers, newArrivals] = await Promise.all([
@@ -21,31 +25,51 @@ export default async function Home() {
     { icon: RotateCcw, label: "Easy Returns" },
   ];
 
+  const orgLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "BRENSTA",
+    url: SITE_URL,
+    logo: `${SITE_URL}/favicon.ico`,
+    description: "Premium women's fashion and lifestyle — jewellery, clothing, bags, accessories, footwear.",
+  };
+  const siteLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "BRENSTA",
+    url: SITE_URL,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${SITE_URL}/search?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <div>
+      <JsonLd data={orgLd} />
+      <JsonLd data={siteLd} />
       {/* ───── Hero ───── */}
       <section className="relative overflow-hidden">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-10 md:grid-cols-2 md:gap-16 md:px-6 md:py-20">
           <div className="order-2 md:order-1">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold-deep">BRENSTA</p>
             <h1 className="brand-wordmark mt-4 text-5xl leading-[1.05] text-charcoal md:text-6xl lg:text-7xl">
-              Jewellery for<br />Every You
+              Fashion for<br />Every You
             </h1>
             <p className="mt-6 max-w-md text-brand-muted">
               Elegant · Trendy · Timeless. A premium destination for women&apos;s jewellery, clothing, bags, accessories and footwear.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link href="/shop">
-                <Button variant="primary" size="lg">Shop Now</Button>
+                <Button variant="primary" size="lg">Shop All</Button>
               </Link>
-              <Link href="/c/jewellery">
-                <Button variant="outline" size="lg">Explore Jewellery</Button>
+              <Link href="/c/clothing">
+                <Button variant="outline" size="lg">Explore Clothing</Button>
               </Link>
             </div>
           </div>
-          <div className="order-1 overflow-hidden rounded-2xl md:order-2">
-            <PlaceholderImage seed="hero-brensta-woman" label="BRENSTA" aspect="portrait" className="h-[420px] md:h-[520px]" />
-          </div>
+          <HeroArtwork className="order-1 h-[420px] md:order-2 md:h-[520px]" />
         </div>
       </section>
 
@@ -79,12 +103,15 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ───── Best Sellers ───── */}
+      {/* ───── Editor's Picks (admin-curated via isFeatured; renamed from "Best Sellers" until real sales exist) ───── */}
       {bestSellers.length > 0 && (
         <section className="bg-white/60">
           <div className="mx-auto max-w-7xl px-4 py-14 md:px-6">
             <div className="flex items-end justify-between">
-              <h2 className="brand-wordmark text-3xl text-charcoal md:text-4xl">Best Sellers</h2>
+              <div>
+                <h2 className="brand-wordmark text-3xl text-charcoal md:text-4xl">Editor&apos;s Picks</h2>
+                <p className="mt-1 text-xs text-brand-muted">Hand-picked by our team.</p>
+              </div>
               <Link href="/shop?sort=popularity" className="hidden text-xs font-semibold uppercase tracking-wider text-gold-deep hover:text-charcoal md:block">
                 View all →
               </Link>

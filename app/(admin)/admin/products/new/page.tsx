@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/db";
 import { AdminPageHeader, Crumb } from "@/components/admin/AdminPageHeader";
 import { ProductForm } from "@/components/admin/ProductForm";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function NewProductPage() {
+  await requireAdmin();
+
   const [categories, attributeDefs] = await Promise.all([
     prisma.category.findMany({ where: { status: "PUBLISHED" }, select: { id: true, name: true, path: true }, orderBy: { path: "asc" } }),
     prisma.attributeDefinition.findMany({ select: { id: true, code: true, name: true, type: true, options: true } }),

@@ -2,8 +2,11 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { listFeedback } from "@/lib/admin/feedback";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FeedbackRow } from "./FeedbackRow";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function FeedbackPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireAdmin();
+
   const sp = await searchParams;
   const status = (sp.status as "ALL" | "NEW" | "REPLIED" | "CLOSED" | undefined) ?? "NEW";
   const page = Math.max(1, Number(sp.page ?? 1));

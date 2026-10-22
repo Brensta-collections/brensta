@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/Button";
 import { listCoupons } from "@/lib/admin/coupons";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CouponRow } from "./CouponRow";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function CouponsPage() {
+  await requireAdmin();
+
   const coupons = await listCoupons();
   return (
     <div className="space-y-5">

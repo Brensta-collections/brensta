@@ -1,8 +1,11 @@
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { listSettings } from "@/lib/admin/settings";
 import { SettingsForm } from "./SettingsForm";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function SettingsPage() {
+  await requireAdmin();
+
   const rows = await listSettings();
   return (
     <div className="space-y-5">

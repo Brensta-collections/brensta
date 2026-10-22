@@ -12,7 +12,7 @@ export async function Footer() {
           <div className="md:col-span-2">
             <Logo size="md" />
             <p className="mt-4 max-w-sm text-sm text-brand-muted">
-              Jewellery for every you. A premium women&apos;s fashion & lifestyle destination — thoughtfully curated.
+              A premium women&apos;s fashion and lifestyle destination — jewellery, clothing, bags, accessories and footwear, thoughtfully curated.
             </p>
             <div className="mt-6 flex items-center gap-3 text-xs text-brand-muted">
               <span className="rounded border border-brand-line bg-white px-2 py-1 font-mono text-[10px] uppercase">Dev build</span>

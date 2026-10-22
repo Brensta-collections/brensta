@@ -2,17 +2,51 @@ import { prisma } from "@/lib/db";
 
 export type CategoryWithChildren = Awaited<ReturnType<typeof getMainCategoriesWithChildren>>[number];
 
+/**
+ * Return top-level published categories for the storefront nav, trimming:
+ *  - subcategories that have zero published products (unless they themselves have grandchildren)
+ *  - top-level categories that have no reachable published products at all
+ *
+ * We never delete; we just hide. Admin keeps full control via the admin tree.
+ */
 export async function getMainCategoriesWithChildren() {
-  return prisma.category.findMany({
+  const roots = await prisma.category.findMany({
     where: { parentId: null, status: "PUBLISHED", showInMenu: true },
     orderBy: { sortOrder: "asc" },
     include: {
       children: {
         where: { status: "PUBLISHED", showInMenu: true },
         orderBy: { sortOrder: "asc" },
+        include: {
+          _count: { select: { products: true, children: true } },
+        },
       },
+      _count: { select: { products: true, children: true } },
     },
   });
+  // Pull product counts for every root (including descendants) so we can hide empty roots.
+  const descendantCountByRoot = new Map<string, number>();
+  for (const r of roots) {
+    const n = await prisma.product.count({
+      where: {
+        status: "PUBLISHED",
+        categories: {
+          some: {
+            category: {
+              OR: [{ path: r.path }, { path: { startsWith: `${r.path}/` } }],
+            },
+          },
+        },
+      },
+    });
+    descendantCountByRoot.set(r.id, n);
+  }
+  return roots
+    .filter((r) => (descendantCountByRoot.get(r.id) ?? 0) > 0)
+    .map((r) => ({
+      ...r,
+      children: r.children.filter((c) => c._count.products > 0 || c._count.children > 0),
+    }));
 }
 
 export async function getCategoryByPath(path: string) {

@@ -1,8 +1,11 @@
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { listBanners } from "@/lib/admin/banners";
 import { BannerPanel } from "./BannerPanel";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function BannersPage() {
+  await requireAdmin();
+
   const banners = await listBanners();
   return (
     <div className="space-y-5">

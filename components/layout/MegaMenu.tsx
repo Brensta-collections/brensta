@@ -19,8 +19,10 @@ export function MegaMenu({ categories }: { categories: CategoryWithChildren[] })
         >
           <Link
             href={`/c${c.path}`}
-            className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium text-charcoal hover:text-gold-deep"
+            className="flex items-center gap-1 rounded-md px-2 py-2 text-xs font-medium text-charcoal hover:text-gold-deep lg:px-3 lg:text-sm"
             onFocus={() => setOpenId(c.id)}
+            aria-haspopup={c.children.length > 0 ? "menu" : undefined}
+            aria-expanded={openId === c.id ? true : undefined}
           >
             {c.name}
             {c.children.length > 0 && <ChevronDown className="h-3 w-3 opacity-60" />}

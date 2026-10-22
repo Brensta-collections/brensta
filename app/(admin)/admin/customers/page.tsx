@@ -4,8 +4,11 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { listCustomers } from "@/lib/admin/customers";
 import { Pagination } from "@/components/storefront/Pagination";
 import { CustomerFilters } from "./CustomerFilters";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function CustomersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireAdmin();
+
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const role = (sp.role as "CUSTOMER" | "STAFF" | "ADMIN" | "ALL" | undefined) ?? "ALL";

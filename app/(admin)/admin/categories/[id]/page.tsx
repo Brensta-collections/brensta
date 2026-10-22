@@ -3,8 +3,11 @@ import { prisma } from "@/lib/db";
 import { AdminPageHeader, Crumb } from "@/components/admin/AdminPageHeader";
 import { CategoryForm } from "@/components/admin/CategoryForm";
 import { getCategoryForEdit } from "@/lib/admin/categories";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
+
   const { id } = await params;
   const [cat, parents] = await Promise.all([
     getCategoryForEdit(id),

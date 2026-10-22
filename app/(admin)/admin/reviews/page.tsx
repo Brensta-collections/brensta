@@ -4,8 +4,11 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { listReviews } from "@/lib/admin/reviews";
 import { ReviewRowActions } from "./ReviewRowActions";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function ReviewsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireAdmin();
+
   const sp = await searchParams;
   const status = (sp.status as "ALL" | "PENDING" | "PUBLISHED" | "HIDDEN" | "REMOVED" | undefined) ?? "PENDING";
   const page = Math.max(1, Number(sp.page ?? 1));

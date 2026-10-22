@@ -11,8 +11,11 @@ import { productDisplayPrice, totalStock } from "@/lib/pricing";
 import { prisma } from "@/lib/db";
 import { ProductFilters } from "./ProductFilters";
 import { Pagination } from "@/components/storefront/Pagination";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function AdminProductsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireAdmin();
+
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const status = (sp.status as "DRAFT" | "PUBLISHED" | "HIDDEN" | "ARCHIVED" | "ALL" | undefined) ?? "ALL";

@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/admin/rbac";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminTopbar } from "@/components/admin/AdminTopbar";
+
+export const metadata: Metadata = {
+  title: { default: "Admin", template: "Admin · %s · BRENSTA" },
+  // Admin surface must never be indexed, even in production.
+  robots: { index: false, follow: false, nocache: true, nosnippet: true, noimageindex: true },
+};
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireAdmin();

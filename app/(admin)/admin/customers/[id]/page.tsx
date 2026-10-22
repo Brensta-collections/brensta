@@ -4,8 +4,11 @@ import { AdminPageHeader, Crumb } from "@/components/admin/AdminPageHeader";
 import { getCustomer } from "@/lib/admin/customers";
 import { formatINR } from "@/lib/utils";
 import { CustomerActions } from "./CustomerActions";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
+
   const { id } = await params;
   const data = await getCustomer(id);
   if (!data) notFound();

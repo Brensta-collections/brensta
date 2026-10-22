@@ -3,8 +3,11 @@ import { prisma } from "@/lib/db";
 import { AdminPageHeader, Crumb } from "@/components/admin/AdminPageHeader";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { getAdminProduct } from "@/lib/admin/products";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireAdmin();
+
   const { id } = await params;
   const [product, categories, attributeDefs] = await Promise.all([
     getAdminProduct(id),

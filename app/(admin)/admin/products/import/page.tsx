@@ -1,7 +1,10 @@
 import { AdminPageHeader, Crumb } from "@/components/admin/AdminPageHeader";
 import { ImportClient } from "./ImportClient";
+import { requireAdmin } from "@/lib/admin/rbac";
 
-export default function ImportPage() {
+export default async function ImportPage() {
+  await requireAdmin();
+
   return (
     <div className="space-y-5">
       <div>

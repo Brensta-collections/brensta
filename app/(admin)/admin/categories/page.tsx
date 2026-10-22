@@ -4,8 +4,11 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/Button";
 import { listAllCategories } from "@/lib/admin/categories";
 import { CategoryTree } from "./CategoryTree";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function AdminCategoriesPage() {
+  await requireAdmin();
+
   const all = await listAllCategories();
   return (
     <div className="space-y-5">

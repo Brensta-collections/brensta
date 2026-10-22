@@ -5,8 +5,11 @@ import { getAdminOrder } from "@/lib/admin/orders";
 import { formatINR } from "@/lib/utils";
 import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
 import { OrderStatusPanel } from "./OrderStatusPanel";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function AdminOrderDetail({ params }: { params: Promise<{ number: string }> }) {
+  await requireAdmin();
+
   const { number } = await params;
   const order = await getAdminOrder(number);
   if (!order) notFound();

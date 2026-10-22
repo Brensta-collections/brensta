@@ -15,20 +15,34 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const IS_PROD_LIKE = /^https:\/\//.test(SITE_URL) && !SITE_URL.includes("localhost");
+
 export const metadata: Metadata = {
   title: {
-    default: "BRENSTA — Jewellery for Every You",
+    default: "BRENSTA — Fashion & Lifestyle for Every You",
     template: "%s | BRENSTA",
   },
   description:
-    "BRENSTA — premium women's fashion & lifestyle. Jewellery, clothing, bags, accessories and footwear for every you.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+    "BRENSTA is a premium women's fashion and lifestyle store — jewellery, clothing, bags, accessories and footwear curated for every you.",
+  metadataBase: new URL(SITE_URL),
+  applicationName: "BRENSTA",
+  alternates: { canonical: "/" },
+  robots: IS_PROD_LIKE
+    ? { index: true, follow: true }
+    : { index: false, follow: false, nocache: true },
   openGraph: {
-    title: "BRENSTA",
-    description: "Premium women's fashion & lifestyle.",
+    title: "BRENSTA — Fashion & Lifestyle for Every You",
+    description: "Premium women's fashion and lifestyle — jewellery, clothing, bags, accessories, footwear.",
     siteName: "BRENSTA",
+    url: SITE_URL,
     locale: "en_IN",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "BRENSTA — Fashion & Lifestyle for Every You",
+    description: "Premium women's fashion and lifestyle.",
   },
 };
 

@@ -4,8 +4,11 @@ import { listAdminOrders } from "@/lib/admin/orders";
 import { formatINR } from "@/lib/utils";
 import { Pagination } from "@/components/storefront/Pagination";
 import { OrderFilters } from "./OrderFilters";
+import { requireAdmin } from "@/lib/admin/rbac";
 
 export default async function AdminOrdersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  await requireAdmin();
+
   const sp = await searchParams;
   const q = typeof sp.q === "string" ? sp.q : "";
   const status = (sp.status as "ALL" | "PENDING" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED" | "RETURNED" | "REFUNDED" | undefined) ?? "ALL";
