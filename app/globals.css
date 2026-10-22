@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/* ================================================================
+   BRENSTA brand tokens — ivory, champagne, gold, charcoal, warm brown
+   ================================================================ */
+:root {
+  --brand-ivory: #FDF8F1;
+  --brand-champagne: #E7D6C3;
+  --brand-gold: #D4AF7C;
+  --brand-gold-deep: #B5915E;
+  --brand-charcoal: #1F1F1F;
+  --brand-warm-brown: #8B5E3C;
+  --brand-muted: #6B5E52;
+  --brand-line: #EADFCF;
+
+  --background: var(--brand-ivory);
+  --foreground: var(--brand-charcoal);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ivory: var(--brand-ivory);
+  --color-champagne: var(--brand-champagne);
+  --color-gold: var(--brand-gold);
+  --color-gold-deep: var(--brand-gold-deep);
+  --color-charcoal: var(--brand-charcoal);
+  --color-warm-brown: var(--brand-warm-brown);
+  --color-brand-muted: var(--brand-muted);
+  --color-brand-line: var(--brand-line);
+  --font-sans: var(--font-sans-brensta);
+  --font-serif: var(--font-serif-brensta);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans-brensta), system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.brand-wordmark {
+  font-family: var(--font-serif-brensta), "Playfair Display", Georgia, serif;
+  letter-spacing: 0.18em;
+}
