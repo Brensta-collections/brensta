@@ -65,8 +65,26 @@ describe("MobileNav — dialog ARIA + trigger wiring", () => {
 describe("MobileNav — keyboard + focus management", () => {
   const src = read("components/layout/MobileNav.tsx");
 
-  it("Escape closes the drawer from any view", () => {
-    expect(src).toMatch(/if \(e\.key === "Escape"\)[\s\S]{0,100}setOpen\(false\)/);
+  it("Escape closes the drawer from any view AND resets submenu state (next open starts at the main list)", () => {
+    // The Escape branch must clear openerCategoryIdRef + activeId before
+    // closing — otherwise reopening after Escape-in-submenu would re-render
+    // the previous submenu instead of the main category list.
+    expect(src).toMatch(
+      /if \(e\.key === "Escape"\)[\s\S]{0,300}openerCategoryIdRef\.current = null;[\s\S]{0,80}setActiveId\(null\);[\s\S]{0,80}setOpen\(false\)/,
+    );
+  });
+
+  it("auto-focus-on-open effect depends on [open] only, so activeId transitions do not override queued focus targets", () => {
+    // The useEffect that focuses the first focusable must NOT include
+    // activeId in its deps — otherwise opening a submenu or returning
+    // via Back would briefly focus the <Logo> ("BRENSTA home") before
+    // openSubmenu / closeSubmenu's rAF lands focus on the intended target.
+    expect(src).toMatch(
+      /useEffect\(\(\) => \{[\s\S]{0,500}first\?\.focus\(\);[\s\S]{0,50}\},\s*\[open\]\);/,
+    );
+    // Belt and braces: no useEffect in this file watches [open, activeId]
+    // for focus management; that would reintroduce the hop.
+    expect(src).not.toMatch(/\},\s*\[open,\s*activeId\]\)/);
   });
 
   it("installs a Tab-key focus trap over the drawer's focusable descendants", () => {

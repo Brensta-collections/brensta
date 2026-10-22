@@ -41,26 +41,39 @@ export function MobileNav({ categories }: { categories: CategoryWithChildren[] }
     };
   }, [open]);
 
-  // Focus + keyboard handling while the drawer is open.
+  // Move focus into the drawer on open. Depends on `open` only — must NOT
+  // re-run on `activeId` changes, otherwise opening a submenu or going Back
+  // would briefly focus the first focusable (the <Logo> "BRENSTA home" link)
+  // before openSubmenu / closeSubmenu's queued rAF can land focus on the
+  // intended target.
+  useEffect(() => {
+    if (!open) return;
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+    const first = drawer.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    first?.focus();
+  }, [open]);
+
+  // Keyboard handling: Escape closes the whole drawer (fully resetting
+  // submenu state so the next open starts at the main list) and Tab is
+  // trapped inside the drawer. The handler queries live DOM on every press,
+  // so this effect does not need activeId in its deps.
   useEffect(() => {
     if (!open) return;
     const drawer = drawerRef.current;
     if (!drawer) return;
 
-    // Move focus into the drawer on open. We pick the first focusable
-    // (which is the Close button) rather than the drawer root so the user
-    // lands on something actionable.
-    const first = drawer.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
-    first?.focus();
-
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
+        // Reset submenu state so reopening the drawer always starts at
+        // the main category list.
+        openerCategoryIdRef.current = null;
+        setActiveId(null);
         setOpen(false);
         return;
       }
       if (e.key !== "Tab") return;
-      // Focus trap: cycle through currently-visible focusable elements.
       const items = Array.from(drawer!.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
         (el) => !el.hasAttribute("disabled") && el.offsetParent !== null,
       );
@@ -83,7 +96,7 @@ export function MobileNav({ categories }: { categories: CategoryWithChildren[] }
     return () => {
       document.removeEventListener("keydown", onKey);
     };
-  }, [open, activeId]);
+  }, [open]);
 
   // On every close path, restore focus to the hamburger trigger. Guard
   // against the initial mount case (open=false since the beginning) — we
