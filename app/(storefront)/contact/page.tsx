@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ContactForm } from "./ContactForm";
 import { BUSINESS_EMAIL, BUSINESS_PHONE_DISPLAY, BUSINESS_PHONE_TEL, isPlaceholderContact } from "@/lib/business";
+import { whatsAppUrlFromSetting, WHATSAPP_GREETING } from "@/lib/whatsapp";
 
 // Root title template is "%s | BRENSTA" — avoid doubling the brand name.
 export const metadata: Metadata = {
@@ -36,6 +37,9 @@ export default async function ContactPage() {
   const phoneTel = isPlaceholderContact(contact.phone) ? BUSINESS_PHONE_TEL : contact.phone.replace(/[^\d+]/g, "");
 
   const whatsapp = isPlaceholderContact(contact.whatsapp) ? null : contact.whatsapp;
+  // Derive the wa.me URL from the same Setting value — null when the value
+  // normalises to something unusable, so the row hides itself safely.
+  const whatsappHref = whatsAppUrlFromSetting(contact.whatsapp, WHATSAPP_GREETING);
   const address = isPlaceholderContact(contact.address) ? null : contact.address;
 
   return (
@@ -52,8 +56,14 @@ export default async function ContactPage() {
         <section className="space-y-4">
           <ContactLine icon={<Mail className="h-4 w-4" />} label="Email" value={email} href={`mailto:${email}`} />
           <ContactLine icon={<Phone className="h-4 w-4" />} label="Phone" value={phoneDisplay} href={`tel:${phoneTel}`} />
-          {whatsapp && (
-            <ContactLine icon={<MessageCircle className="h-4 w-4" />} label="WhatsApp" value={whatsapp} />
+          {whatsapp && whatsappHref && (
+            <ContactLine
+              icon={<MessageCircle className="h-4 w-4" />}
+              label="WhatsApp"
+              value={whatsapp}
+              href={whatsappHref}
+              external
+            />
           )}
           {address && (
             <ContactLine icon={<MapPin className="h-4 w-4" />} label="Registered office" value={address} />
@@ -71,14 +81,32 @@ export default async function ContactPage() {
   );
 }
 
-function ContactLine({ icon, label, value, href }: { icon: React.ReactNode; label: string; value: string; href?: string }) {
+function ContactLine({
+  icon,
+  label,
+  value,
+  href,
+  external,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  href?: string;
+  external?: boolean;
+}) {
   return (
     <div className="flex items-start gap-3 rounded-lg border border-brand-line bg-white p-4">
       <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-champagne/60 text-gold-deep">{icon}</span>
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-muted">{label}</p>
         {href ? (
-          <a href={href} className="mt-0.5 block text-sm text-charcoal hover:text-gold-deep">{value}</a>
+          <a
+            href={href}
+            {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            className="mt-0.5 block text-sm text-charcoal hover:text-gold-deep"
+          >
+            {value}
+          </a>
         ) : (
           <p className="mt-0.5 text-sm text-charcoal">{value}</p>
         )}
