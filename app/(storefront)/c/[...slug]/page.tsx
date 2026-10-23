@@ -2,10 +2,15 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
-import { getCategoryByPath, getBreadcrumbs, getCategoryAndDescendantIds } from "@/lib/categories";
+import {
+  getCategoryByPathWithVisibleChildren,
+  getBreadcrumbs,
+  getCategoryAndDescendantIds,
+} from "@/lib/categories";
 import { listProducts } from "@/lib/products";
 import { getWishlistProductIds } from "@/lib/wishlist";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { ProductGrid } from "@/components/storefront/ProductGrid";
 import { SortSelect } from "@/components/storefront/SortSelect";
 import { Pagination } from "@/components/storefront/Pagination";
@@ -44,11 +49,14 @@ export default async function CategoryPage({
   const path = toPath(slug);
 
   const [category, breadcrumbs, categoryIds] = await Promise.all([
-    getCategoryByPath(path),
+    getCategoryByPathWithVisibleChildren(path),
     getBreadcrumbs(path),
     getCategoryAndDescendantIds(path),
   ]);
   if (!category) notFound();
+  // Only surface subcategory chips that actually have products in their
+  // subtree — admin still sees the full tree via /admin/categories.
+  const visibleChildren = category.children.filter((c) => c.hasProductsInSubtree);
 
   // Pull filters from searchParams
   const sort = (sp.sort as string) ?? "popularity";
@@ -140,9 +148,9 @@ export default async function CategoryPage({
         <SortSelect current={sort} />
       </div>
 
-      {category.children.length > 0 && (
+      {visibleChildren.length > 0 && (
         <nav className="mt-4 flex flex-wrap gap-2">
-          {category.children.map((sub) => (
+          {visibleChildren.map((sub) => (
             <Link
               key={sub.id}
               href={`/c${sub.path}`}
@@ -157,8 +165,22 @@ export default async function CategoryPage({
       <div className="mt-8 grid gap-8 md:grid-cols-[220px_1fr]">
         <FilterSidebar attributes={sidebarAttributes} minPrice={sp.min as string | undefined} maxPrice={sp.max as string | undefined} />
         <div>
-          <ProductGrid products={filtered} inWishlistIds={wishlistIds} />
-          <Pagination pathname={`/c${path}`} searchParams={sp} page={page} pages={pages} />
+          {filtered.length === 0 ? (
+            <EmptyState
+              title={`${category.name} is coming soon`}
+              description="We're adding products to this collection. In the meantime, browse related categories."
+              cta={
+                category.parent
+                  ? { label: `← Back to ${category.parent.name}`, href: `/c${category.parent.path}` }
+                  : { label: "Browse all", href: "/shop" }
+              }
+            />
+          ) : (
+            <>
+              <ProductGrid products={filtered} inWishlistIds={wishlistIds} />
+              <Pagination pathname={`/c${path}`} searchParams={sp} page={page} pages={pages} />
+            </>
+          )}
         </div>
       </div>
     </div>

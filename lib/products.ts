@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import type { Prisma } from "@prisma/client";
+import { buildSearchStems, escapeLikeMetachars } from "@/lib/search-query";
 
 export type ProductListFilters = {
   categoryIds?: string[];
@@ -27,11 +28,24 @@ export async function listProducts(f: ProductListFilters = {}) {
     where.categories = { some: { categoryId: { in: f.categoryIds } } };
   }
   if (f.search) {
-    where.OR = [
-      { name: { contains: f.search, mode: "insensitive" } },
-      { shortDescription: { contains: f.search, mode: "insensitive" } },
-      { description: { contains: f.search, mode: "insensitive" } },
-    ];
+    const stems = buildSearchStems(f.search).map(escapeLikeMetachars);
+    const or: Prisma.ProductWhereInput[] = [];
+    for (const stem of stems) {
+      or.push(
+        { name: { contains: stem, mode: "insensitive" } },
+        { shortDescription: { contains: stem, mode: "insensitive" } },
+        { description: { contains: stem, mode: "insensitive" } },
+        // Category path match covers the directly-linked category AND every
+        // ancestor without a recursive query: a product on
+        // /jewellery/earrings/jhumka is linked to that leaf, whose path
+        // contains the substrings "jewellery", "earrings" and "jhumka".
+        { categories: { some: { category: { path: { contains: stem, mode: "insensitive" } } } } },
+        // Belt-and-braces: match the display name too in case a category's
+        // name is edited away from its original slug.
+        { categories: { some: { category: { name: { contains: stem, mode: "insensitive" } } } } },
+      );
+    }
+    where.OR = or;
   }
   if (f.minPrice !== undefined || f.maxPrice !== undefined) {
     where.basePrice = {};

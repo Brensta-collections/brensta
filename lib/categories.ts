@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { categoryHasProductsInSubtree } from "@/lib/sitemap-utils";
 
 export type CategoryWithChildren = Awaited<ReturnType<typeof getMainCategoriesWithChildren>>[number];
 
@@ -77,6 +78,53 @@ export async function getCategoryByPath(path: string) {
       },
     },
   });
+}
+
+/**
+ * Like getCategoryByPath, but every direct child carries a
+ * `hasProductsInSubtree` flag so the storefront chip row can hide
+ * categories that have no stock anywhere beneath them. Mirrors the
+ * empty-subtree hiding the mega menu already performs — admin pages
+ * continue to see every category via getCategoryByPath.
+ */
+export async function getCategoryByPathWithVisibleChildren(path: string) {
+  const cat = await prisma.category.findUnique({
+    where: { path },
+    include: {
+      parent: true,
+      children: { where: { status: "PUBLISHED" }, orderBy: { sortOrder: "asc" } },
+      attributes: {
+        include: { attribute: true },
+        orderBy: { sortOrder: "asc" },
+      },
+    },
+  });
+  if (!cat) return null;
+
+  let pathsWithProducts = new Set<string>();
+  if (cat.children.length > 0) {
+    // Pull every PUBLISHED-product category path under this subtree in one
+    // query. Prisma lacks `startsWith: { in: [...] }` so we OR the prefixes.
+    const prefixes = cat.children.flatMap((c) => [
+      { path: c.path },
+      { path: { startsWith: `${c.path}/` } as const },
+    ]);
+    const rows = await prisma.productCategory.findMany({
+      where: {
+        product: { status: "PUBLISHED" },
+        category: { OR: prefixes },
+      },
+      select: { category: { select: { path: true } } },
+    });
+    pathsWithProducts = new Set(rows.map((r) => r.category.path));
+  }
+
+  const children = cat.children.map((c) => ({
+    ...c,
+    hasProductsInSubtree: categoryHasProductsInSubtree(c.path, pathsWithProducts),
+  }));
+
+  return { ...cat, children };
 }
 
 export async function getBreadcrumbs(path: string) {
