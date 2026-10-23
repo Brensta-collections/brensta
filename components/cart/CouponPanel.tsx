@@ -65,7 +65,10 @@ export function CouponPanel({ initialCode, initialDiscount }: Props) {
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             placeholder="Enter coupon code"
-            className="flex-1 rounded-full border border-brand-line bg-white px-3 py-1.5 text-sm uppercase placeholder:text-brand-muted/60 focus:border-gold focus:outline-none"
+            // min-w-0 lets flex-1 actually shrink the input: without it, the
+            // browser's default input intrinsic width (size≈20 characters)
+            // keeps the form row wider than its narrow-mobile cell.
+            className="min-w-0 flex-1 rounded-full border border-brand-line bg-white px-3 py-1.5 text-sm uppercase placeholder:text-brand-muted/60 focus:border-gold focus:outline-none"
             autoCapitalize="characters"
             aria-label="Coupon code"
             maxLength={40}

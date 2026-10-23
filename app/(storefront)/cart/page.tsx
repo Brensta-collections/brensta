@@ -89,8 +89,13 @@ export default async function CartPage() {
         </div>
       )}
 
+      {/* min-w-0 on both grid children is load-bearing: without it the
+          grid-item default (min-width: auto) propagates each child's
+          intrinsic min-content width upward and overflows the viewport at
+          375–414px. The flex children inside each grid cell carry their
+          own min-w-0 where needed. */}
       <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_380px]">
-        <ul className="divide-y divide-brand-line border-y border-brand-line">
+        <ul className="min-w-0 divide-y divide-brand-line border-y border-brand-line">
           {enriched.map((it) => {
             const options = it.variant.optionValues as Record<string, string>;
             const label = Object.entries(options).map(([k, v]) => `${k}: ${v}`).join(" · ");
@@ -121,7 +126,7 @@ export default async function CartPage() {
           })}
         </ul>
 
-        <aside className="h-fit space-y-4 rounded-xl border border-brand-line bg-white p-6">
+        <aside className="h-fit min-w-0 space-y-4 rounded-xl border border-brand-line bg-white p-6">
           <div>
             <h2 className="brand-wordmark text-xl text-charcoal">Order Summary</h2>
             <dl className="mt-5 space-y-3 text-sm">

@@ -35,7 +35,7 @@ export function CartLineItem({ item }: { item: Item }) {
           <img src={item.imageUrl!} alt={item.productName} className="h-full w-full object-cover" />
         )}
       </Link>
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <Link href={`/p/${item.productSlug}`} className="line-clamp-2 text-sm font-medium text-charcoal hover:text-gold-deep">
           {item.productName}
         </Link>
@@ -47,7 +47,7 @@ export function CartLineItem({ item }: { item: Item }) {
             {item.notice}
           </p>
         )}
-        <div className="mt-2 flex items-center justify-between gap-3">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           {item.unavailable ? (
             <span className="rounded-full border border-brand-line bg-ivory px-3 py-1 text-[11px] font-semibold uppercase text-brand-muted">Unavailable</span>
           ) : (
