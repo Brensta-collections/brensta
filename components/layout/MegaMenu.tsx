@@ -1,15 +1,62 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { CategoryWithChildren } from "@/lib/categories";
+import { clampPanelLeft } from "@/lib/mega-menu-position";
+
+const VIEWPORT_GUTTER_PX = 16;
 
 export function MegaMenu({ categories }: { categories: CategoryWithChildren[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
   // Per-category refs so Escape can restore focus to the exact trigger that opened.
   const triggerRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const panelRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  // Panel's parent-relative `left` in CSS px once we've measured. Null means
+  // "fall back to the Tailwind left-1/2 -translate-x-1/2 default".
+  const [panelLeftPx, setPanelLeftPx] = useState<number | null>(null);
+
+  // Clamp the open panel so it stays fully in the viewport. Runs before
+  // paint via useLayoutEffect — no visible flicker. Rebinds on resize while
+  // open and clears on close so a stale px value doesn't leak between panels.
+  //
+  // Lint note: setState inside this effect is the React-sanctioned pattern
+  // for syncing with an external system (DOM measurements + resize events).
+  // The panel's offsetWidth isn't known until the panel has mounted, so we
+  // cannot derive the clamped left during render. The two setPanelLeftPx
+  // calls below have targeted eslint-disable-next-line comments.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useLayoutEffect(() => {
+    if (!openId) {
+      setPanelLeftPx(null);
+      return;
+    }
+    function reposition() {
+      const trigger = triggerRefs.current[openId!];
+      const panel = panelRefs.current[openId!];
+      if (!trigger || !panel) return;
+      const triggerRect = trigger.getBoundingClientRect();
+      const panelWidth = panel.offsetWidth;
+      const viewportLeft = clampPanelLeft({
+        triggerLeft: triggerRect.left,
+        triggerWidth: triggerRect.width,
+        panelWidth,
+        viewportWidth: window.innerWidth,
+        gutter: VIEWPORT_GUTTER_PX,
+      });
+      // Convert the viewport-relative target to the panel's parent frame.
+      const parent = trigger.parentElement;
+      const parentLeft = parent ? parent.getBoundingClientRect().left : 0;
+      setPanelLeftPx(viewportLeft - parentLeft);
+    }
+    reposition();
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("resize", reposition);
+    };
+  }, [openId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useEffect(() => {
     if (!openId) return;
@@ -113,6 +160,22 @@ export function MegaMenu({ categories }: { categories: CategoryWithChildren[] })
                   hasGrandchildren
                     ? "absolute left-1/2 top-full z-50 w-[720px] -translate-x-1/2 pt-2"
                     : "absolute left-1/2 top-full z-50 w-[480px] -translate-x-1/2 pt-2"
+                }
+                // Inline style overrides the Tailwind centering once we've
+                // measured the viewport. The useLayoutEffect runs before paint
+                // so the clamped position is applied in the same frame as the
+                // panel's first appearance — no visible flicker.
+                //
+                // Both `transform` and `translate` must be reset: Tailwind v4
+                // maps `-translate-x-1/2` to the modern CSS `translate`
+                // property, not `transform`. Setting only `transform: "none"`
+                // leaves `translate: -50% 0` in effect and the panel renders
+                // at (clamped-left − panelWidth/2) — exactly the browser
+                // audit's reported offset.
+                style={
+                  panelLeftPx != null
+                    ? { left: `${panelLeftPx}px`, transform: "none", translate: "none" }
+                    : undefined
                 }
                 onKeyDown={(e) => onPanelKeyDown(e, c.id)}
               >
