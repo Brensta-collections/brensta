@@ -1,10 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ShieldCheck, Sparkles, Truck, RotateCcw } from "lucide-react";
 import { LinkButton } from "@/components/ui/LinkButton";
 import { CategoryCard } from "@/components/ui/CategoryCard";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { PlaceholderImage } from "@/components/ui/PlaceholderImage";
-import { HeroArtwork } from "@/components/storefront/HeroArtwork";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getMainCategoriesWithChildren } from "@/lib/categories";
 import { getFeaturedProducts, getNewArrivals } from "@/lib/products";
@@ -51,10 +51,43 @@ export default async function Home() {
     <div>
       <JsonLd data={orgLd} />
       <JsonLd data={siteLd} />
-      {/* ───── Hero ───── */}
-      <section className="relative overflow-hidden">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-10 md:grid-cols-2 md:gap-16 md:px-6 md:py-20">
-          <div className="order-2 md:order-1">
+      {/* ───── Hero (full-bleed) ─────
+          Desktop (md+): the campaign photograph is an absolutely-positioned
+          background filling the entire hero section; a left-to-right ivory
+          gradient keeps the text column fully legible over the empty beige
+          space on the left of the image. No rounded card, no boxed
+          illustration — the image blends into the page.
+          Mobile (<md): the image sits in flow above the text, edge-to-edge
+          with no horizontal padding, same aesthetic without needing a
+          text-over-image overlay. */}
+      <section className="relative overflow-hidden bg-ivory">
+        {/* Image container. On md+ it becomes absolute + full-size so it fills
+            the section behind the text. On mobile it's in flow with a fixed
+            height, placed before the text block. */}
+        <div className="relative h-[320px] w-full md:absolute md:inset-0 md:h-full">
+          <Image
+            src="/images/brensta-premium-hero.png"
+            alt="BRENSTA model in an ivory-and-gold embroidered saree, resting against a sunlit arched interior with a brass vase of white flowers — Fashion for Every You"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+            style={{ objectPosition: "right center" }}
+          />
+          {/* Readability veil on md+ only — hidden on mobile where the text
+              lives in a separate block below. Uses the brand ivory token so
+              it tracks the --color-ivory CSS variable automatically. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-ivory via-ivory/70 to-transparent md:block"
+          />
+        </div>
+
+        {/* Text column. On mobile it follows the image in flow (padded); on
+            md+ it sits atop the image via `relative` within the overflow-
+            hidden section. */}
+        <div className="relative mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-28 lg:py-36">
+          <div className="max-w-md md:max-w-lg">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold-deep">BRENSTA</p>
             <h1 className="brand-wordmark mt-4 text-5xl leading-[1.05] text-charcoal md:text-6xl lg:text-7xl">
               Fashion for<br />Every You
@@ -67,7 +100,6 @@ export default async function Home() {
               <LinkButton href="/c/clothing" variant="outline" size="lg">Explore Clothing</LinkButton>
             </div>
           </div>
-          <HeroArtwork className="order-1 h-[420px] md:order-2 md:h-[520px]" />
         </div>
       </section>
 
