@@ -15,6 +15,7 @@ import { ProductGrid } from "@/components/storefront/ProductGrid";
 import { SortSelect } from "@/components/storefront/SortSelect";
 import { Pagination } from "@/components/storefront/Pagination";
 import { FilterSidebar } from "@/components/storefront/FilterSidebar";
+import { JewelleryLandingGrid } from "@/components/storefront/JewelleryLandingGrid";
 
 type SP = Record<string, string | string[] | undefined>;
 
@@ -57,6 +58,29 @@ export default async function CategoryPage({
   // Only surface subcategory chips that actually have products in their
   // subtree — admin still sees the full tree via /admin/categories.
   const visibleChildren = category.children.filter((c) => c.hasProductsInSubtree);
+
+  // Jewellery landing — bespoke visual grid (hero cards + compact list)
+  // because 16+ top-level jewellery types no longer fit the generic chip row.
+  // Every other category page keeps the original chip + grid layout below.
+  if (path === "/jewellery") {
+    const totalProducts = await prisma.product.count({
+      where: {
+        status: "PUBLISHED",
+        categories: { some: { categoryId: { in: categoryIds } } },
+      },
+    });
+    const landingChildren = category.children
+      .filter((c) => c.status === "PUBLISHED")
+      .map((c) => ({ id: c.id, name: c.name, path: c.path, image: c.image, hasProductsInSubtree: c.hasProductsInSubtree }));
+    return (
+      <JewelleryLandingGrid
+        categoryName={category.name}
+        categoryDescription={category.description}
+        childCategories={landingChildren}
+        totalProducts={totalProducts}
+      />
+    );
+  }
 
   // Pull filters from searchParams
   const sort = (sp.sort as string) ?? "popularity";

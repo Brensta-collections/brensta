@@ -34,7 +34,11 @@ export function CategoryForm({ initial, parents }: { initial?: Initial; parents:
     seoTitle: initial?.seoTitle ?? "",
     seoDescription: initial?.seoDescription ?? "",
     status: initial?.status ?? "DRAFT",
-    showInMenu: initial?.showInMenu ?? true,
+    // Default FALSE for brand-new categories: as the catalogue grows (100+
+    // subcategories), the mega menu would overflow if every new row auto-
+    // appeared. Admin explicitly promotes a category by ticking this box.
+    // Existing rows keep whatever value they were saved with.
+    showInMenu: initial?.showInMenu ?? false,
     sortOrder: initial?.sortOrder ?? 0,
   });
   const [err, setErr] = useState<string | null>(null);
