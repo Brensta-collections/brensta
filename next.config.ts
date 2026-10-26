@@ -1,5 +1,27 @@
 import type { NextConfig } from "next";
 
+// Baseline security headers applied to every response.
+// NOT included here (deliberately, until a CSP policy that passes manual QA
+// against the live site is written): Content-Security-Policy. A broken CSP
+// breaks the storefront silently; add it as a follow-up with report-only
+// first, then enforce.
+const SECURITY_HEADERS = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-DNS-Prefetch-Control", value: "on" },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+  },
+  // HSTS: only emit in production. Browsers ignore it on http:// so this
+  // is defensive, not strictly needed, but keeping it conditional avoids
+  // the preload flag ever ending up on a staging host that drops to HTTP.
+  ...(process.env.NODE_ENV === "production"
+    ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]
+    : []),
+] as const;
+
 const nextConfig: NextConfig = {
   /* config options here */
   // Ecommerce pages are data-driven; opt out of Next 16 cacheComponents for M2.
@@ -13,6 +35,11 @@ const nextConfig: NextConfig = {
         as: "*.css",
       },
     },
+  },
+  async headers() {
+    return [
+      { source: "/:path*", headers: SECURITY_HEADERS as unknown as { key: string; value: string }[] },
+    ];
   },
   async redirects() {
     return [

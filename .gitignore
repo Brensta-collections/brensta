@@ -40,6 +40,9 @@ yarn-error.log*
 # tmp
 /tmp
 
+# backups produced by scripts/backup-*.sh
+/backups
+
 # vercel
 .vercel
 
