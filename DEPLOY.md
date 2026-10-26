@@ -32,7 +32,8 @@ The authoritative list is `.env.example`. The validator at
 
 | Var | Example | Notes |
 |---|---|---|
-| `DATABASE_URL` | `postgres://user:pw@ep-xxx.neon.tech/brensta?sslmode=require` | Use the **pooled** connection string Neon shows. |
+| `DATABASE_URL` | pooled Neon URL (`ep-<id>-pooler.ap-southeast-1.aws.neon.tech`) with `?sslmode=require&pgbouncer=true` | Runtime queries. PgBouncer transaction mode. See §3. |
+| `DIRECT_URL` | direct Neon URL (same host **without** `-pooler`) with `?sslmode=require` | Used by `prisma migrate deploy` + shadow DB + `pg_dump`. No `pgbouncer=true`. See §3. |
 | `AUTH_SECRET` | 32+ chars | Generate: `openssl rand -base64 32`. Rotate per environment. |
 | `AUTH_URL` | `https://brensta.example` | HTTPS required unless localhost. |
 | `NEXT_PUBLIC_SITE_URL` | `https://brensta.example` | Must not contain `localhost`. |
@@ -63,9 +64,10 @@ The authoritative list is `.env.example`. The validator at
 
 ### Variables Prisma reads
 
-Prisma CLI reads **`.env`** (not `.env.local`). Keep `DATABASE_URL` in
-both files, with the same value, during local dev. On the VM you can set
-`DATABASE_URL` via systemd `EnvironmentFile=` and skip `.env` entirely.
+Prisma CLI reads **`.env`** (not `.env.local`). Keep `DATABASE_URL` **and
+`DIRECT_URL`** in both files, with the same values, during local dev. On
+the VM you can set both via systemd `EnvironmentFile=` and skip `.env`
+entirely.
 
 ---
 
@@ -97,24 +99,44 @@ sudo npm install -g pnpm@12
 
 ## 3. Database — Neon PostgreSQL
 
-- Create a project in Neon's dashboard; take the **pooled** connection string.
-- Keep the free compute's **auto-suspend** on; the first request after idle
-  will cold-start in a few seconds. The health probe is cheap enough to
-  warm the instance, but do not hammer it with ping loops.
-- Append `?sslmode=require` if it is not already present.
+Neon exposes the SAME database at TWO endpoints and this project needs both.
+
+- **Pooled** (hostname contains `-pooler`) — PgBouncer transaction mode.
+  Fast cold start, short-lived connections. Used by the running Next.js
+  app. Set `DATABASE_URL` to this. Must include `?pgbouncer=true&sslmode=require`
+  so Prisma skips prepared statements and TLS is enforced.
+- **Direct** (same hostname **without** `-pooler`) — session mode.
+  Required by `prisma migrate deploy`, `prisma db pull`, and `pg_dump`
+  (transaction mode would break large exports and schema migrations).
+  Set `DIRECT_URL` to this. Must include `?sslmode=require`. No pgbouncer flag.
+
+Project region for launch-v1: **ap-southeast-1 (Singapore)**. Hostnames
+look like `ep-<id>.ap-southeast-1.aws.neon.tech`.
+
+Operational notes:
+
+- The free compute **auto-suspends after ~5 min idle**. First request after
+  suspend has a ~1–3 s cold start.
+- The health probe at `/api/health` is intentionally DB-free, so an uptime
+  monitor pinging it will NOT keep the Neon compute awake. That is
+  deliberate: DB wakeups should happen only when real traffic needs them.
+- `scripts/backup-db.sh` should run against **`DIRECT_URL`**, not the
+  pooled URL. Export the direct value in that cron entry's environment.
 
 Apply schema to the Neon database **from the VM** after `pnpm install`:
 
 ```bash
 pnpm prisma generate
-pnpm prisma migrate deploy        # production-safe: no shadow DB, no drift detection
+pnpm db:deploy                    # alias for `prisma migrate deploy`
 pnpm db:seed                      # idempotent base data
 pnpm create:admin                 # one-time, reads BOOTSTRAP_ADMIN_* envs
 # Unset BOOTSTRAP_ADMIN_* in the systemd env file and reload.
 ```
 
 Prisma `migrate deploy` is non-interactive and will refuse to proceed if
-there is a drifted migration folder — fix locally first.
+there is a drifted migration folder — fix locally first. For launch-v1
+the schema file matches the two existing migrations exactly, so a deploy
+against an empty Neon database produces a clean, auditable history.
 
 ---
 
