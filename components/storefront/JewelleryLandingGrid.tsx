@@ -32,17 +32,24 @@ export function JewelleryLandingGrid({
   childCategories,
   totalProducts,
 }: Props) {
+  // Only surface subcategories that actually have products — otherwise
+  // customers click a hero tile and land on an empty "coming soon" page,
+  // which signals the shop is broken. Admin still sees empties via
+  // /admin/categories and can un-hide the hero cards here by uploading
+  // products to those subcategories.
+  const liveChildren = childCategories.filter((c) => c.hasProductsInSubtree);
+
   // Split into hero (top 4 by convention) + the rest.
   const hero: Child[] = [];
   const rest: Child[] = [];
-  const byPath = new Map(childCategories.map((c) => [c.path, c] as const));
+  const byPath = new Map(liveChildren.map((c) => [c.path, c] as const));
   for (const slug of HERO_SLUGS) {
     const path = `/jewellery/${slug}`;
     const found = byPath.get(path);
     if (found) hero.push(found);
   }
   const heroPaths = new Set(hero.map((h) => h.path));
-  for (const c of childCategories) {
+  for (const c of liveChildren) {
     if (!heroPaths.has(c.path)) rest.push(c);
   }
 
