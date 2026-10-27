@@ -230,90 +230,17 @@ export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult
   // Fire-and-forget order confirmation email. We deliberately do NOT await
   // this before responding — a slow/failing email provider must never cause
   // the order (which is already written) to appear unsuccessful to the
-  // customer. Any failure is logged for the operator to investigate.
-  void sendOrderConfirmationEmail(number).catch((e) => {
-    console.error(`[placeOrder] confirmation email failed for ${number}:`, e);
-  });
+  // customer. The shared helper handles env + provider + template.
+  void (async () => {
+    try {
+      const { sendOrderConfirmation } = await import("@/lib/order-emails");
+      await sendOrderConfirmation(number);
+    } catch (e) {
+      console.error(`[placeOrder] confirmation email failed for ${number}:`, e);
+    }
+  })();
 
   return { ok: true, orderNumber: number };
-}
-
-async function sendOrderConfirmationEmail(orderNumber: string): Promise<void> {
-  // Read env fresh on every call. Do NOT go through getEmailProvider()'s
-  // module-level singleton — on Vercel, that singleton can be populated
-  // during a warm instance that pre-dated the RESEND_API_KEY env var,
-  // which silently downgrades every subsequent order email to Console.
-  const resendKey = process.env.RESEND_API_KEY;
-  const shouldSend = typeof resendKey === "string" && resendKey.length > 10;
-
-  console.log(
-    `[order-email] trigger order=${orderNumber} shouldSend=${shouldSend} keyLen=${resendKey?.length ?? 0}`,
-  );
-
-  if (!shouldSend) {
-    console.log(`[order-email] skipped order=${orderNumber}: no RESEND_API_KEY`);
-    return;
-  }
-
-  const [{ ResendEmailProvider }, { orderConfirmationEmail }] = await Promise.all([
-    import("@/lib/email"),
-    import("@/lib/email/templates/order-confirmation"),
-  ]);
-
-  const order = await prisma.order.findUnique({
-    where: { number: orderNumber },
-    include: {
-      items: { select: { nameSnapshot: true, qty: true, unitPrice: true, lineTotal: true } },
-      payments: { select: { provider: true }, orderBy: { createdAt: "asc" }, take: 1 },
-    },
-  });
-  if (!order || !order.email) return;
-
-  const addr = order.shippingAddress as unknown as {
-    name?: string;
-    phone?: string;
-    line1?: string;
-    line2?: string | null;
-    city?: string;
-    state?: string;
-    pincode?: string;
-  };
-
-  const message = orderConfirmationEmail({
-    to: order.email,
-    orderNumber: order.number,
-    items: order.items.map((i) => ({
-      name: i.nameSnapshot,
-      qty: i.qty,
-      unitPrice: i.unitPrice as unknown as number,
-      lineTotal: i.lineTotal as unknown as number,
-    })),
-    subtotal: order.subtotal as unknown as number,
-    discount: order.discount as unknown as number,
-    shipping: order.shipping as unknown as number,
-    total: order.total as unknown as number,
-    paymentMethod: order.payments[0]?.provider ?? "COD",
-    shippingAddress: {
-      name: addr?.name ?? "Customer",
-      phone: addr?.phone ?? order.phone,
-      line1: addr?.line1 ?? "",
-      line2: addr?.line2 ?? null,
-      city: addr?.city ?? "",
-      state: addr?.state ?? "",
-      pincode: addr?.pincode ?? "",
-    },
-    siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.brensta.com",
-  });
-
-  // Construct a fresh Resend provider from the current env, every time.
-  const provider = new ResendEmailProvider(resendKey!);
-  console.log(`[order-email] sending order=${orderNumber} to=${order.email}`);
-  const r = await provider.send(message);
-  if (r.ok) {
-    console.log(`[order-email] sent order=${orderNumber} providerId=${r.providerId ?? "?"}`);
-  } else {
-    console.error(`[order-email] send failed order=${orderNumber}: ${r.reason}`);
-  }
 }
 
 export async function listMyOrders() {

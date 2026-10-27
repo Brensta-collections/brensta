@@ -113,5 +113,21 @@ export async function updateOrderStatus(orderId: string, nextStatus: OrderStatus
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${order.number}`);
   revalidatePath(`/account/orders/${order.number}`);
+
+  // Fire-and-forget customer notification for status changes customers
+  // actually care about. A slow / failing Resend must not make the
+  // admin's status-change action look broken, so we never await.
+  void (async () => {
+    try {
+      const { sendOrderStatusEmail } = await import("@/lib/order-emails");
+      await sendOrderStatusEmail(order.number, nextStatus, {
+        tracking: nextStatus === "SHIPPED" ? tracking : undefined,
+        reason: nextStatus === "CANCELLED" ? reason : undefined,
+      });
+    } catch (e) {
+      console.error(`[updateOrderStatus] status email failed for ${order.number}:`, e);
+    }
+  })();
+
   return { ok: true as const };
 }
