@@ -25,7 +25,11 @@ export interface EmailProvider {
   send(args: SendArgs): Promise<SendResult>;
 }
 
-export const SUPPORT_FROM_FALLBACK = "BRENSTA <no-reply@brensta.local>";
+// Default From-address for outbound mail. MUST be at a domain already verified
+// in the Resend account; otherwise Resend rejects every send at the API gate
+// and no row appears in Resend's Emails log. brensta.com is verified
+// (DKIM + SPF live in GoDaddy). An operator can override via EMAIL_FROM env.
+export const SUPPORT_FROM_FALLBACK = "BRENSTA <orders@brensta.com>";
 export const SUPPORT_REPLY_TO_FALLBACK = "brensta.business@gmail.com";
 
 /** Pino redactor keys — exported so logger config can import them in one place later. */
