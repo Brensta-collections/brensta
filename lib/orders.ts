@@ -226,7 +226,78 @@ export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult
 
   revalidatePath("/cart");
   revalidatePath("/account/orders");
+
+  // Fire-and-forget order confirmation email. We deliberately do NOT await
+  // this before responding — a slow/failing email provider must never cause
+  // the order (which is already written) to appear unsuccessful to the
+  // customer. Any failure is logged for the operator to investigate.
+  void sendOrderConfirmationEmail(number).catch((e) => {
+    console.error(`[placeOrder] confirmation email failed for ${number}:`, e);
+  });
+
   return { ok: true, orderNumber: number };
+}
+
+async function sendOrderConfirmationEmail(orderNumber: string): Promise<void> {
+  const [{ getEmailProvider, isRealEmailConfigured }, { orderConfirmationEmail }] =
+    await Promise.all([import("@/lib/email"), import("@/lib/email/templates/order-confirmation")]);
+
+  if (!isRealEmailConfigured()) {
+    // Dev / unconfigured: skip. The console provider would still print the
+    // whole email to stdout which is noisy and unnecessary in production.
+    return;
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { number: orderNumber },
+    include: {
+      items: { select: { nameSnapshot: true, qty: true, unitPrice: true, lineTotal: true } },
+      payments: { select: { provider: true }, orderBy: { createdAt: "asc" }, take: 1 },
+    },
+  });
+  if (!order || !order.email) return;
+
+  const addr = order.shippingAddress as unknown as {
+    name?: string;
+    phone?: string;
+    line1?: string;
+    line2?: string | null;
+    city?: string;
+    state?: string;
+    pincode?: string;
+  };
+
+  const message = orderConfirmationEmail({
+    to: order.email,
+    orderNumber: order.number,
+    items: order.items.map((i) => ({
+      name: i.nameSnapshot,
+      qty: i.qty,
+      unitPrice: i.unitPrice as unknown as number,
+      lineTotal: i.lineTotal as unknown as number,
+    })),
+    subtotal: order.subtotal as unknown as number,
+    discount: order.discount as unknown as number,
+    shipping: order.shipping as unknown as number,
+    total: order.total as unknown as number,
+    paymentMethod: order.payments[0]?.provider ?? "COD",
+    shippingAddress: {
+      name: addr?.name ?? "Customer",
+      phone: addr?.phone ?? order.phone,
+      line1: addr?.line1 ?? "",
+      line2: addr?.line2 ?? null,
+      city: addr?.city ?? "",
+      state: addr?.state ?? "",
+      pincode: addr?.pincode ?? "",
+    },
+    siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.brensta.com",
+  });
+
+  const provider = getEmailProvider();
+  const r = await provider.send(message);
+  if (!r.ok) {
+    console.error(`[order-email] send failed via ${provider.name} for ${orderNumber}: ${r.reason}`);
+  }
 }
 
 export async function listMyOrders() {
