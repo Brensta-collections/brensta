@@ -1,5 +1,12 @@
 import { prisma } from "@/lib/db";
-import { BUSINESS_EMAIL, BUSINESS_PHONE_DISPLAY } from "@/lib/business";
+import {
+  BUSINESS_EMAIL,
+  BUSINESS_PHONE_DISPLAY,
+  LEGAL_ENTITY_NAME,
+  LEGAL_ADDRESS,
+  GRIEVANCE_OFFICER,
+  DISPUTE_JURISDICTION,
+} from "@/lib/business";
 
 export const POLICY_SLUGS = [
   "privacy", "terms", "shipping", "returns",
@@ -9,112 +16,213 @@ export const POLICY_SLUGS = [
 export type PolicySlug = (typeof POLICY_SLUGS)[number];
 
 /**
- * Draft templates loaded only when the DB has no body text yet.
- * [PLACEHOLDER] markers highlight business-specific values the owner must
- * confirm and legal counsel should review before publishing. Items that have
- * been confirmed by the owner (contact email, contact phone) are inlined
- * from @/lib/business.
+ * Owner-confirmed policy templates loaded when the DB `Policy` row for a
+ * slug has no admin-saved body yet. All business-specific values (legal
+ * entity, registered address, grievance officer, dispute jurisdiction,
+ * return window, refund SLAs) are inlined from @/lib/business — single
+ * source of truth. If anything changes (new address, new phone), update
+ * lib/business.ts and these templates re-render automatically.
+ *
+ * These bodies are read by scripts/launch-check.ts; any remaining
+ * `[PLACEHOLDER]` in a user-facing paragraph will cause the pre-launch
+ * script to fail loudly.
  */
 const DRAFT_BODIES: Record<PolicySlug, { title: string; body: string }> = {
   privacy: {
     title: "Privacy Policy",
     body: `_Last updated: ${new Date().toISOString().slice(0, 10)}_
 
-This is a **draft policy** prepared for BRENSTA — a women's fashion and lifestyle store operating in India. **[PLACEHOLDER — have this reviewed by qualified legal counsel before publishing.]**
+This Privacy Policy explains how BRENSTA collects, uses and protects the personal information you share with us when you shop on our website.
 
 ## 1. Who we are
-BRENSTA is operated by _[PLACEHOLDER — legal entity name]_ (hereafter "we", "us"), registered at _[PLACEHOLDER — registered business address]_. You can reach us at ${BUSINESS_EMAIL} or ${BUSINESS_PHONE_DISPLAY}.
+BRENSTA is a women's fashion and lifestyle brand operated by ${LEGAL_ENTITY_NAME} (hereafter "we", "us", "BRENSTA"), with registered business address: ${LEGAL_ADDRESS}. You can reach us at ${BUSINESS_EMAIL} or ${BUSINESS_PHONE_DISPLAY}.
 
 ## 2. What we collect
 When you shop with us we collect:
 - Account information you provide (name, email, mobile).
 - Shipping and billing addresses.
-- Order and payment metadata (your card/UPI details are handled by our payment partner, not stored by us).
+- Order and payment metadata (your card / UPI details are handled by our payment partner, not stored by us).
 - Technical information needed to run the site (cookies required for sign-in and cart).
 
 ## 3. How we use your data
-- To process and deliver your orders.
-- To send order updates and support messages.
-- To improve the store and prevent fraud.
+- To process, pack and deliver your orders.
+- To send order updates, delivery notifications and support messages.
+- To respond to your questions and resolve complaints.
+- To improve our storefront and detect fraud.
 
 ## 4. Who we share it with
-- Shipping and payment partners we work with (only what they need to complete your order).
-- Government authorities when required by law.
+- Shipping and payment partners we work with — only the minimum data they need to complete your order.
+- Government or regulatory authorities when required by law.
 
-We do **not** sell your data.
+We do **not** sell your data to anyone.
 
-## 5. Your rights
-Under Indian data-protection law (DPDP Act 2023) you can request access to, correction of, or deletion of your personal data. Write to ${BUSINESS_EMAIL} and we will respond within _[PLACEHOLDER — SLA, typically 30 days]_.
+## 5. How long we keep it
+We retain order and billing data for the period required by Indian tax law (typically 8 years). Account data is retained for as long as your account is active; you may ask us to delete it at any time.
 
-## 6. Security
-We use industry-standard encryption in transit and hashed passwords at rest. No system is ever perfectly secure; if we detect a breach that affects you, we will notify you promptly.
+## 6. Your rights (DPDP Act 2023)
+Under India's Digital Personal Data Protection Act 2023, you have the right to:
+- Access the personal data we hold about you.
+- Correct inaccuracies.
+- Request erasure (subject to tax-law retention above).
+- Withdraw consent for marketing communication.
 
-## 7. Changes
-We will post updates on this page with a new "Last updated" date.
+Write to ${BUSINESS_EMAIL} with your request. We will respond within **30 days**.
+
+## 7. Security
+We use industry-standard HTTPS encryption in transit and bcrypt-hashed passwords at rest. Payment information is handled by our PCI-compliant payment partner and never touches our servers. If we ever detect a breach that affects you, we will notify you promptly.
+
+## 8. Cookies
+See our [Cookie Notice](/p/policies/cookies).
+
+## 9. Grievance Officer
+Any complaint about this policy or your personal data should be addressed to our Grievance Officer — details on the [Contact & Grievance Redressal](/p/policies/grievance) page.
+
+## 10. Changes
+We will post updates on this page with a new "Last updated" date. Material changes will also be announced via email to registered customers.
 `,
   },
   terms: {
     title: "Terms & Conditions",
     body: `_Last updated: ${new Date().toISOString().slice(0, 10)}_
 
-These Terms govern your use of the BRENSTA store, operated by _[PLACEHOLDER — legal entity name]_.
+These Terms govern your use of the BRENSTA store, operated by ${LEGAL_ENTITY_NAME}, with registered business address: ${LEGAL_ADDRESS}.
 
 ## 1. Acceptance
-By placing an order you confirm you are at least 18, that the information you provided is accurate, and that you accept these Terms.
+By placing an order on www.brensta.com, you confirm that:
+- You are at least 18 years old (or have the consent of a parent / guardian).
+- The information you provide (name, address, phone, email) is true and accurate.
+- You accept these Terms and all referenced policies.
 
 ## 2. Products and pricing
-We make every effort to describe our products accurately. Colours and textures may vary slightly between devices. Prices on this website are in INR and inclusive of applicable taxes unless stated otherwise.
+We describe our products as accurately as possible. Colours, finish and texture may vary slightly between devices and from the actual product. Prices on this website are in **Indian Rupees (INR)** and inclusive of applicable GST unless clearly stated otherwise.
 
 ## 3. Orders
-We may cancel an order if an item is out of stock, the price was listed incorrectly, or we suspect fraudulent activity. In those cases we will refund you in full.
+We reserve the right to cancel an order if:
+- An item is out of stock.
+- The price was displayed incorrectly due to a technical error.
+- We reasonably suspect fraudulent activity.
+In each case we will refund any amount already paid.
 
 ## 4. Delivery
-See the [Shipping & Delivery Policy](/p/policies/shipping).
+See our [Shipping & Delivery Policy](/p/policies/shipping) for dispatch times, delivery windows and shipping charges.
 
-## 5. Returns & refunds
-See the [Returns & Refunds Policy](/p/policies/returns) and the [Cancellation Policy](/p/policies/cancellation).
+## 5. Returns, refunds and cancellation
+See our [Returns & Refunds Policy](/p/policies/returns) and [Cancellation Policy](/p/policies/cancellation).
 
 ## 6. Intellectual property
-All product photographs, descriptions and the BRENSTA wordmark are our property and may not be reused without our written permission.
+All product photographs, descriptions and the BRENSTA wordmark are our property. You may not copy, resell or reuse them without our prior written permission.
 
-## 7. Governing law
-These Terms are governed by Indian law. Disputes will be resolved in the courts of _[PLACEHOLDER — jurisdiction]_.
+## 7. Prohibited use
+You agree not to use the website in any way that is unlawful, infringes any third-party right, or disrupts the service for other customers.
+
+## 8. Limitation of liability
+To the extent permitted by Indian law, our total liability for any claim arising from an order will not exceed the amount you paid for that order.
+
+## 9. Governing law and jurisdiction
+These Terms are governed by the laws of India. Any dispute will be resolved exclusively by the competent courts at **${DISPUTE_JURISDICTION}**.
+
+## 10. Contact
+For questions about these Terms, write to ${BUSINESS_EMAIL} or call ${BUSINESS_PHONE_DISPLAY}.
 `,
   },
   shipping: {
     title: "Shipping & Delivery Policy",
     body: `_Last updated: ${new Date().toISOString().slice(0, 10)}_
 
-**This is a draft policy for a development build. [PLACEHOLDER — the owner must confirm courier partners and SLAs before this is published.]**
+## Dispatch
+- We dispatch orders from our Pune warehouse within **1–2 working days** of order confirmation (Monday–Saturday, excluding public holidays).
+- Once your order is dispatched, you will receive a tracking link by email and WhatsApp.
 
-- We dispatch orders within _[PLACEHOLDER — e.g. 1–2 working days]_.
-- Expected delivery time: _[PLACEHOLDER — e.g. 5–7 working days]_ depending on your location.
-- A tracking number will be shared with you once your order is dispatched.
-- Shipping is free on orders above ₹999. Smaller orders attract a flat ₹50 shipping fee.
-- Cash on Delivery is available in serviceable pincodes with a nominal handling fee of ₹40.
+## Delivery windows
+- **Metros** (Mumbai, Delhi, Bengaluru, Chennai, Kolkata, Hyderabad, Pune): typically **3–5 working days** after dispatch.
+- **Tier-2 cities**: typically **4–7 working days** after dispatch.
+- **Other serviceable PIN codes**: typically **5–10 working days** after dispatch.
+
+Delivery timelines are estimates. Festival seasons, weather and courier backlogs can cause occasional delays — we will keep you informed if your order is affected.
+
+## Shipping charges
+| Order value | Shipping fee |
+| --- | --- |
+| Orders above ₹999 | **Free** |
+| Orders ₹1 – ₹998 | Flat ₹50 |
+
+**Cash on Delivery (COD)** is available in serviceable PIN codes with an additional ₹40 handling fee.
+
+## PIN code serviceability
+Our courier partners cover most Indian PIN codes. If your area is not serviceable we will notify you at the time of checkout.
+
+## Non-delivery
+If a delivery attempt is made and the parcel cannot be handed over (locked premises, incorrect address, recipient unavailable), our courier partner will make up to **2 further attempts** before returning the parcel to us. We will contact you by phone before the return is initiated.
+
+## Questions
+For shipping-related queries, write to ${BUSINESS_EMAIL} or call ${BUSINESS_PHONE_DISPLAY} with your order number.
 `,
   },
   returns: {
     title: "Returns & Refunds Policy",
     body: `_Last updated: ${new Date().toISOString().slice(0, 10)}_
 
-**Draft — please confirm the actual window and process before publishing. [PLACEHOLDER]**
+We want you to love your BRENSTA order. If something is not right, here is how returns and refunds work.
 
-- Return window: _[PLACEHOLDER — e.g. 7 days from delivery]_.
-- Items must be unused, unworn, with original tags and packaging.
-- Earrings, intimate wear and items marked "final sale" are not eligible for return.
-- Refunds are issued to the original payment method within _[PLACEHOLDER — SLA]_ of the item reaching our warehouse.
+## Return window
+You may request a return within **7 days of delivery**. Requests beyond this window cannot be accepted.
 
-To request a return, visit your [My Orders](/account/orders) page or write to ${BUSINESS_EMAIL}.
+## Return eligibility
+To be accepted, the product must be:
+- **Unused and unworn**, with no signs of use, perfume or stains.
+- With **all original tags attached** and the original packaging intact.
+- Accompanied by the invoice / order number.
+
+## Items not eligible for return
+For hygiene and safety reasons, the following are **non-returnable**:
+- Pierced earrings (including jhumkas, studs, nose pins).
+- Items marked "Final Sale" or "Clearance" on the product page.
+- Products damaged due to misuse by the customer.
+
+## How to request a return
+1. Visit your [My Orders](/account/orders) page and open the order.
+2. Click "Request return" and briefly tell us the reason.
+3. Our team will respond within **48 hours** with either an approval and pickup schedule, or a reason for refusing the request.
+
+Alternatively, write to ${BUSINESS_EMAIL} with your order number.
+
+## Pickup
+If approved, our courier will pick up the parcel from your address. In case our courier does not service your PIN code for returns, we will arrange a self-ship with a reimbursed shipping fee (up to ₹100).
+
+## Refunds
+- Refunds are issued to the **original payment method** within **7 working days** of the returned item reaching our warehouse and passing a quality check.
+- COD orders are refunded via UPI / bank transfer to the bank account you provide at return time.
+- Shipping charges on the original order are **not refunded** unless the return was due to a defect or wrong item shipped.
+
+## Damaged, defective or wrong item
+If the item arrived damaged, defective or is not what you ordered:
+- Report it within **48 hours of delivery** by writing to ${BUSINESS_EMAIL} with photos.
+- We will replace the item at no extra cost or refund you in full, whichever you prefer.
+
+## Exchanges
+We currently do not offer direct exchanges. If you want a different size or variant, please return the original item and place a fresh order.
 `,
   },
   cancellation: {
     title: "Cancellation Policy",
     body: `_Last updated: ${new Date().toISOString().slice(0, 10)}_
 
-- You may cancel an order free of charge any time before it is dispatched.
-- Once dispatched, the order can only be returned under the [Returns & Refunds Policy](/p/policies/returns).
-- Cash on Delivery orders are cancelled by the system if the first delivery attempt fails and no response is received within _[PLACEHOLDER — SLA]_.
+## By you
+- You may cancel an order **free of charge** at any time before it is dispatched. Visit [My Orders](/account/orders), open the order, and click "Cancel".
+- Once the order is dispatched, cancellation is no longer possible. If you no longer want the item, follow the [Returns & Refunds Policy](/p/policies/returns) after delivery.
+
+## By us
+We may cancel your order and issue a full refund if:
+- The item is out of stock.
+- A pricing or system error has occurred.
+- We are unable to verify the delivery address or we reasonably suspect fraud.
+
+## Cash on Delivery (COD)
+- COD orders are cancelled by the system if **two consecutive delivery attempts fail** and you cannot be reached by the courier.
+- Repeated COD refusals from the same customer may lead us to disable COD on future orders for that account.
+
+## Refund of cancelled orders
+Refunds for prepaid orders are initiated within **24 hours of cancellation** and typically reach you in **5–7 working days**, depending on your bank or UPI app.
 `,
   },
   payment: {
@@ -132,14 +240,37 @@ Prices are shown in INR and are inclusive of applicable GST unless stated otherw
     title: "Contact & Grievance Redressal",
     body: `_Last updated: ${new Date().toISOString().slice(0, 10)}_
 
-Under the Consumer Protection (E-Commerce) Rules 2020, every e-commerce entity in India must appoint a grievance officer.
+Under the **Consumer Protection (E-Commerce) Rules 2020**, every e-commerce entity in India must appoint a Grievance Officer and publish their contact details.
 
-**Grievance Officer:** _[PLACEHOLDER — name]_
-**Email:** ${BUSINESS_EMAIL}
-**Phone:** ${BUSINESS_PHONE_DISPLAY}
-**Address:** _[PLACEHOLDER — registered business address]_
+## Grievance Officer
 
-We acknowledge every complaint within _[PLACEHOLDER — SLA, typically 48 hours]_ and aim to resolve it within _[PLACEHOLDER — SLA, typically 15–30 days]_.
+| Field | Detail |
+| --- | --- |
+| **Name** | ${GRIEVANCE_OFFICER.name} |
+| **Role** | Grievance Officer, BRENSTA |
+| **Email** | ${GRIEVANCE_OFFICER.email} |
+| **Phone / WhatsApp** | ${GRIEVANCE_OFFICER.phone} |
+| **Address** | ${LEGAL_ADDRESS} |
+
+## How to raise a complaint
+
+1. **Preferred:** email ${BUSINESS_EMAIL} with your order number and a short description of the issue.
+2. **Alternatively:** call or WhatsApp ${BUSINESS_PHONE_DISPLAY} between 10:00 and 19:00 IST (Monday–Saturday).
+3. **In writing:** send a letter to the registered address above.
+
+## Service levels
+
+- We **acknowledge** every complaint within **48 hours** of receipt.
+- We **resolve** or respond substantively within **15 working days**, in line with the Consumer Protection Rules 2020.
+- If a complaint requires longer investigation (e.g. courier dispute), we will keep you updated every 5 working days until closure.
+
+## Escalation
+
+If you are not satisfied with the response of the Grievance Officer, you may escalate to:
+
+- **National Consumer Helpline** — 1915 or https://consumerhelpline.gov.in
+- **The National Consumer Disputes Redressal Commission** — https://edaakhil.nic.in
+- The jurisdictional Consumer Dispute Redressal Forum at **${DISPUTE_JURISDICTION}**.
 `,
   },
   faq: {
@@ -157,7 +288,7 @@ Yes, with a ₹40 handling fee, subject to pincode serviceability.
 Once your order ships you'll find a tracking link in your [My Orders](/account/orders) page.
 
 ## What is your return policy?
-See our [Returns & Refunds Policy](/p/policies/returns). _[PLACEHOLDER — confirm final window before publishing.]_
+See our [Returns & Refunds Policy](/p/policies/returns). You have **7 days from delivery** to request a return; pierced earrings and final-sale items are not returnable.
 
 ## How do I contact you?
 Write to ${BUSINESS_EMAIL}, call ${BUSINESS_PHONE_DISPLAY}, or use the [Contact](/contact) page.

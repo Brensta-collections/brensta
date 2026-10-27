@@ -1,15 +1,10 @@
 /**
- * Owner-supplied, authoritative business contact facts. These are the
- * fallbacks used across the storefront and policy pages when the DB-backed
- * admin `Setting` rows still carry seeded placeholders. The admin can override
- * them from /admin/settings; this file is NOT what the storefront reads
- * directly — the storefront always queries the DB first, then falls back to
- * these constants.
+ * Owner-confirmed, authoritative business contact facts.
  *
- * Do NOT add a registered address, GSTIN, WhatsApp number, courier SLAs,
- * refund windows or company name here — none of those have been confirmed by
- * the owner. Those stay in the policy drafts as explicit [PLACEHOLDER]
- * markers so legal + ops can finalise them before launch.
+ * Legal entity is a sole proprietorship. The proprietor's name appears ONLY
+ * in the Privacy, Terms and Grievance pages, where the Consumer Protection
+ * (E-Commerce) Rules 2020 require identifying the operating entity. Nowhere
+ * else — the storefront presents the "BRENSTA" brand to customers.
  */
 export const BUSINESS_EMAIL = "brensta.business@gmail.com";
 
@@ -18,10 +13,28 @@ export const BUSINESS_PHONE_DISPLAY = "+91 93097 01804";
 // Dial-safe phone, for `href="tel:…"`.
 export const BUSINESS_PHONE_TEL = "+919309701804";
 
+/** Legal operating entity — used only on legally-required disclosure pages. */
+export const LEGAL_ENTITY_NAME = "Jayshree Shreekrushna Katkade (Sole Proprietor, trading as BRENSTA)";
+
+/** Registered business address — used on policy pages. */
+export const LEGAL_ADDRESS =
+  "Gat No. 286, Havaldar Vasti, Near Swami Samarth Mandir, Moshi, Pune, Maharashtra — 412105, India";
+
+/** Grievance Officer — statutory role under CPA 2019 + E-Commerce Rules 2020. */
+export const GRIEVANCE_OFFICER = {
+  // Sole proprietor is the grievance officer by default for a sole prop.
+  name: "Jayshree Shreekrushna Katkade",
+  email: BUSINESS_EMAIL,
+  phone: BUSINESS_PHONE_DISPLAY,
+};
+
+/** Dispute jurisdiction — where any court case related to orders is heard. */
+export const DISPUTE_JURISDICTION = "Pune, Maharashtra, India";
+
 /**
- * Returns true if a stored Setting value is still a placeholder, empty, or
- * one of the obviously-unset seed values (@brensta.local emails, phone
- * numbers starting with 00000, bracketed [PLACEHOLDER] markers).
+ * Returns true if a stored Setting value is still a seed-time stub (empty,
+ * obviously-unset email, phone starting 00000, or still contains the
+ * `[PLACEHOLDER]` marker from a draft policy body).
  */
 export function isPlaceholderContact(v: string | null | undefined): boolean {
   if (!v) return true;

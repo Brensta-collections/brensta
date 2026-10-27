@@ -97,7 +97,7 @@ export default async function Home() {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <LinkButton href="/shop" variant="primary" size="lg">Shop All</LinkButton>
-              <LinkButton href="/c/clothing" variant="outline" size="lg">Explore Clothing</LinkButton>
+              <LinkButton href="/c/jewellery" variant="outline" size="lg">Shop Jewellery</LinkButton>
             </div>
           </div>
         </div>

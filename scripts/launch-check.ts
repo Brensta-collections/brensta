@@ -20,8 +20,14 @@ import { validateEnv } from "../lib/env";
 const ROOT = resolve(__dirname, "..");
 
 function countPlaceholders(): number {
+  // Only count [PLACEHOLDER markers that appear INSIDE policy body strings
+  // (quoted template literals following `body: \``), not in comments or regex.
   const src = readFileSync(resolve(ROOT, "lib/policies.ts"), "utf8");
-  return (src.match(/\[PLACEHOLDER/g) ?? []).length;
+  const bodyBlocks = src.match(/body:\s*`[\s\S]*?`/g) ?? [];
+  return bodyBlocks.reduce(
+    (n, body) => n + (body.match(/\[PLACEHOLDER/g) ?? []).length,
+    0,
+  );
 }
 
 function hr() {
@@ -53,13 +59,13 @@ const placeholders = countPlaceholders();
 console.log(`policies: ${placeholders} [PLACEHOLDER] markers still in lib/policies.ts`);
 
 console.log("");
-console.log("owner decisions still pending (see Group G report for the full list):");
-console.log("  - legal entity name, registered address, GSTIN");
-console.log("  - jurisdiction for Terms disputes");
-console.log("  - grievance officer name + acknowledgement/resolution SLAs");
-console.log("  - courier partners + dispatch/delivery windows");
-console.log("  - return window and refund SLA");
-console.log("  - whether +91 93097 01804 is WhatsApp-enabled");
+console.log("owner decisions still worth confirming before heavy marketing:");
+console.log("  - GSTIN (mandatory if annual turnover > ₹40 lakh)");
+console.log("  - courier partner contract + published tracking SLA");
+console.log("  - whether +91 93097 01804 is WhatsApp-enabled for support");
+console.log("  - admin + Neon + R2 credentials rotated after any chat exposure");
+console.log("  - Resend domain-verified so order emails actually send");
+console.log("  - Razorpay sandbox tested before enabling online payments");
 console.log("");
 
 if (!report.ok) process.exit(1);
