@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Instagram } from "lucide-react";
 import { getMainCategoriesWithChildren } from "@/lib/categories";
 import { Logo } from "./Logo";
 import {
@@ -8,6 +9,8 @@ import {
   BUSINESS_EMAIL,
   BUSINESS_PHONE_DISPLAY,
 } from "@/lib/business";
+
+const INSTAGRAM_URL = "https://www.instagram.com/brensta.in";
 
 export async function Footer() {
   const categories = await getMainCategoriesWithChildren();
@@ -21,6 +24,25 @@ export async function Footer() {
             <p className="mt-4 max-w-sm text-sm text-brand-muted">
               A premium women&apos;s fashion and lifestyle destination — jewellery, clothing, bags, accessories and footwear, thoughtfully curated.
             </p>
+            <div className="mt-6 flex items-center gap-3">
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Follow BRENSTA on Instagram"
+                className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-brand-line bg-white text-charcoal transition hover:border-gold hover:bg-gold hover:text-ivory"
+              >
+                <Instagram className="h-5 w-5" />
+              </a>
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-charcoal hover:text-gold-deep"
+              >
+                Follow @brensta.in on Instagram
+              </a>
+            </div>
             <div className="mt-6 space-y-1 text-xs leading-relaxed text-brand-muted">
               <p className="font-semibold text-charcoal">{LEGAL_ENTITY_SHORT}</p>
               <p>{LEGAL_ADDRESS}</p>
