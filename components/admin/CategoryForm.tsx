@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { FormField, inputCls } from "@/components/auth/FormField";
@@ -43,6 +43,31 @@ export function CategoryForm({ initial, parents }: { initial?: Initial; parents:
   });
   const [err, setErr] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function onPickImage(file: File | undefined) {
+    if (!file) return;
+    setErr(null);
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("prefix", "cat");
+      const res = await fetch("/api/admin/upload-standalone", { method: "POST", body: fd });
+      const json = (await res.json()) as { ok?: boolean; url?: string; error?: string };
+      if (!res.ok || !json.ok || !json.url) {
+        setErr(json.error ?? "Upload failed.");
+      } else {
+        setV((p) => ({ ...p, image: json.url! }));
+      }
+    } catch {
+      setErr("Upload failed. Try a smaller image (JPG/PNG under 8 MB).");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
 
   function nameToSlug(name: string) {
     if (!isEdit && v.slug === slugify(v.name)) setV((p) => ({ ...p, slug: slugify(name) }));
@@ -93,8 +118,47 @@ export function CategoryForm({ initial, parents }: { initial?: Initial; parents:
           <FormField id="desc" label="Description">
             <textarea id="desc" rows={3} className={inputCls} value={v.description ?? ""} onChange={(e) => setV({ ...v, description: e.target.value })} />
           </FormField>
-          <FormField id="image" label="Category image URL" hint="Optional. Can be an uploaded /uploads/… path.">
-            <input id="image" className={inputCls} value={v.image ?? ""} onChange={(e) => setV({ ...v, image: e.target.value })} />
+          <FormField id="image" label="Category image" hint="Upload a square image (800×800 recommended) or paste any image URL.">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => onPickImage(e.target.files?.[0])}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploading}
+                  onClick={() => fileRef.current?.click()}
+                >
+                  {uploading ? "Uploading…" : "Upload image"}
+                </Button>
+                {v.image ? (
+                  <button
+                    type="button"
+                    className="text-xs text-brand-muted hover:text-warm-brown"
+                    onClick={() => setV({ ...v, image: "" })}
+                  >
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+              <input
+                id="image"
+                className={inputCls}
+                placeholder="Or paste an image URL (https://…)"
+                value={v.image ?? ""}
+                onChange={(e) => setV({ ...v, image: e.target.value })}
+              />
+              {v.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={v.image} alt="Category preview" className="h-32 w-32 rounded-lg border border-brand-line object-cover" />
+              ) : null}
+            </div>
           </FormField>
         </div>
       </section>
