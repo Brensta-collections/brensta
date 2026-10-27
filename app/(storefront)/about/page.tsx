@@ -24,8 +24,8 @@ export default function AboutPage() {
             every piece feels considered, versatile and quietly beautiful.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-charcoal/80">
-            This is a BRENSTA development build. Our catalogue is being prepared and demo products are clearly labelled
-            while we finalise suppliers, photography and policies with the owner.
+            Every piece is sourced carefully, photographed in natural light, and shipped from Pune — so your order
+            feels personal, from the first click to the moment it arrives at your door.
           </p>
           <dl className="mt-8 grid grid-cols-3 gap-4 border-t border-brand-line pt-6 text-center">
             <div>

@@ -42,7 +42,7 @@ export default async function OrderSuccessPage({ params }: { params: Promise<{ n
         </div>
 
         <p className="mt-6 text-xs text-brand-muted">
-          This is a BRENSTA development build. Demo products are not fulfilled.
+          A confirmation email will reach you shortly. Expect delivery within 5–7 working days.
         </p>
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
