@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // should inherit that so a dev build never leaks indexed pages into search.
   return {
     title: p.title,
-    description: `${p.title} — BRENSTA. Draft content; please verify business-specific details.`,
+    description: `${p.title} — BRENSTA.`,
     alternates: { canonical: `/p/policies/${slug}` },
   };
 }
@@ -39,12 +39,7 @@ export default async function PolicyPage({ params }: { params: Promise<{ slug: s
         <p className="mt-1 text-xs text-brand-muted">Last updated {new Date(p.updatedAt).toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "2-digit" })}</p>
       )}
 
-      <div className="mt-6 rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-xs text-charcoal/80">
-        <strong>Draft:</strong> This policy was prepared for development. Content marked <code className="font-mono">[PLACEHOLDER]</code> needs to be
-        confirmed by the business owner, and the whole document should be reviewed by qualified legal counsel before being published to real customers.
-      </div>
-
-      <article className="prose prose-sm mt-8 max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
+      <article className="prose prose-sm mt-6 max-w-none" dangerouslySetInnerHTML={{ __html: html }} />
 
       <aside className="mt-12 border-t border-brand-line pt-6">
         <p className="text-xs font-semibold uppercase tracking-wider text-gold-deep">More policies</p>

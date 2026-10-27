@@ -14,16 +14,22 @@ export const BUSINESS_PHONE_DISPLAY = "+91 93097 01804";
 export const BUSINESS_PHONE_TEL = "+919309701804";
 
 /** Legal operating entity — used only on legally-required disclosure pages. */
-export const LEGAL_ENTITY_NAME = "Jayshree Shreekrushna Katkade (Sole Proprietor, trading as BRENSTA)";
+export const LEGAL_ENTITY_NAME = "Jayshree Shrikrishna Katkade (Sole Proprietor, trading as BRENSTA)";
 
-/** Registered business address — used on policy pages. */
+/** Short form for footer / contact page where the full disclosure line reads better. */
+export const LEGAL_ENTITY_SHORT = "BRENSTA — Proprietor: Jayshree Shrikrishna Katkade";
+
+/** Registered business address — used on policy, contact and footer pages. */
 export const LEGAL_ADDRESS =
-  "Gat No. 286, Havaldar Vasti, Near Swami Samarth Mandir, Moshi, Pune, Maharashtra — 412105, India";
+  "Gat No. 286, Pruthvihome, Moshi Alandi Road, Near Swami Samarth Mandir, Moshi, Pimpri Chinchwad, Pune, Maharashtra — 412105, India";
+
+/** Statutory GSTIN of the sole proprietorship. Shown on legal disclosure pages. */
+export const GSTIN = "27CGJPK6341K1Z1";
 
 /** Grievance Officer — statutory role under CPA 2019 + E-Commerce Rules 2020. */
 export const GRIEVANCE_OFFICER = {
   // Sole proprietor is the grievance officer by default for a sole prop.
-  name: "Jayshree Shreekrushna Katkade",
+  name: "Jayshree Shrikrishna Katkade",
   email: BUSINESS_EMAIL,
   phone: BUSINESS_PHONE_DISPLAY,
 };

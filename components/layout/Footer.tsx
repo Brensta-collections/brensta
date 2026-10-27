@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { getMainCategoriesWithChildren } from "@/lib/categories";
 import { Logo } from "./Logo";
+import {
+  LEGAL_ENTITY_SHORT,
+  LEGAL_ADDRESS,
+  GSTIN,
+  BUSINESS_EMAIL,
+  BUSINESS_PHONE_DISPLAY,
+} from "@/lib/business";
 
 export async function Footer() {
   const categories = await getMainCategoriesWithChildren();
@@ -14,9 +21,12 @@ export async function Footer() {
             <p className="mt-4 max-w-sm text-sm text-brand-muted">
               A premium women&apos;s fashion and lifestyle destination — jewellery, clothing, bags, accessories and footwear, thoughtfully curated.
             </p>
-            <div className="mt-6 flex items-center gap-3 text-xs text-brand-muted">
-              <span className="rounded border border-brand-line bg-white px-2 py-1 font-mono text-[10px] uppercase">Dev build</span>
-              <span>Demo products are clearly labelled.</span>
+            <div className="mt-6 space-y-1 text-xs leading-relaxed text-brand-muted">
+              <p className="font-semibold text-charcoal">{LEGAL_ENTITY_SHORT}</p>
+              <p>{LEGAL_ADDRESS}</p>
+              <p>GSTIN: <span className="font-mono text-charcoal">{GSTIN}</span></p>
+              <p>Email: <a href={`mailto:${BUSINESS_EMAIL}`} className="hover:text-gold-deep">{BUSINESS_EMAIL}</a></p>
+              <p>Phone: {BUSINESS_PHONE_DISPLAY}</p>
             </div>
           </div>
 

@@ -3,7 +3,15 @@ import { Mail, Phone, MessageCircle, MapPin } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ContactForm } from "./ContactForm";
-import { BUSINESS_EMAIL, BUSINESS_PHONE_DISPLAY, BUSINESS_PHONE_TEL, isPlaceholderContact } from "@/lib/business";
+import {
+  BUSINESS_EMAIL,
+  BUSINESS_PHONE_DISPLAY,
+  BUSINESS_PHONE_TEL,
+  LEGAL_ENTITY_SHORT,
+  LEGAL_ADDRESS,
+  GSTIN,
+  isPlaceholderContact,
+} from "@/lib/business";
 import { whatsAppUrlFromSetting, WHATSAPP_GREETING } from "@/lib/whatsapp";
 
 // Root title template is "%s | BRENSTA" — avoid doubling the brand name.
@@ -68,6 +76,13 @@ export default async function ContactPage() {
           {address && (
             <ContactLine icon={<MapPin className="h-4 w-4" />} label="Registered office" value={address} />
           )}
+
+          <div className="mt-6 rounded-xl border border-brand-line bg-white p-4 text-sm text-charcoal">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-deep">Registered business</p>
+            <p className="mt-2 font-semibold">{LEGAL_ENTITY_SHORT}</p>
+            <p className="mt-1 text-brand-muted">{LEGAL_ADDRESS}</p>
+            <p className="mt-2 text-xs"><span className="text-brand-muted">GSTIN:</span> <span className="font-mono text-charcoal">{GSTIN}</span></p>
+          </div>
         </section>
 
         {/* ───── Form ───── */}

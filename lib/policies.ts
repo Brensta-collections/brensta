@@ -4,6 +4,7 @@ import {
   BUSINESS_PHONE_DISPLAY,
   LEGAL_ENTITY_NAME,
   LEGAL_ADDRESS,
+  GSTIN,
   GRIEVANCE_OFFICER,
   DISPUTE_JURISDICTION,
 } from "@/lib/business";
@@ -85,7 +86,7 @@ We will post updates on this page with a new "Last updated" date. Material chang
     title: "Terms & Conditions",
     body: `_Last updated: ${new Date().toISOString().slice(0, 10)}_
 
-These Terms govern your use of the BRENSTA store, operated by ${LEGAL_ENTITY_NAME}, with registered business address: ${LEGAL_ADDRESS}.
+These Terms govern your use of the BRENSTA store, operated by ${LEGAL_ENTITY_NAME}, with registered business address: ${LEGAL_ADDRESS}. GSTIN: ${GSTIN}.
 
 ## 1. Acceptance
 By placing an order on www.brensta.com, you confirm that:
@@ -251,6 +252,7 @@ Under the **Consumer Protection (E-Commerce) Rules 2020**, every e-commerce enti
 | **Email** | ${GRIEVANCE_OFFICER.email} |
 | **Phone / WhatsApp** | ${GRIEVANCE_OFFICER.phone} |
 | **Address** | ${LEGAL_ADDRESS} |
+| **GSTIN** | ${GSTIN} |
 
 ## How to raise a complaint
 

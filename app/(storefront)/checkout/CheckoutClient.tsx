@@ -224,7 +224,7 @@ export function CheckoutClient(props: {
           {pending ? "Placing order…" : `Place order · ${formatINR(total)}`}
         </Button>
         <p className="mt-3 text-center text-[11px] text-brand-muted">
-          Demo products are seeded for development only. No real orders are fulfilled yet.
+          You will receive a confirmation email once your order is placed.
         </p>
       </aside>
     </div>
