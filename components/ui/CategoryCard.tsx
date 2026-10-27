@@ -14,7 +14,9 @@ export function CategoryCard({ name, path, subCount, image }: { name: string; pa
       </div>
       <div className="p-4 text-center">
         <h3 className="brand-wordmark text-lg text-charcoal group-hover:text-gold-deep">{name}</h3>
-        <p className="mt-1 text-xs text-brand-muted">{subCount > 0 ? `${subCount} subcategories` : "Explore"}</p>
+        <p className="mt-1 text-xs text-brand-muted">
+          {subCount > 0 ? `${subCount} ${subCount === 1 ? "subcategory" : "subcategories"}` : "Explore"}
+        </p>
       </div>
     </Link>
   );
