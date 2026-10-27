@@ -239,14 +239,26 @@ export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult
 }
 
 async function sendOrderConfirmationEmail(orderNumber: string): Promise<void> {
-  const [{ getEmailProvider, isRealEmailConfigured }, { orderConfirmationEmail }] =
-    await Promise.all([import("@/lib/email"), import("@/lib/email/templates/order-confirmation")]);
+  // Read env fresh on every call. Do NOT go through getEmailProvider()'s
+  // module-level singleton — on Vercel, that singleton can be populated
+  // during a warm instance that pre-dated the RESEND_API_KEY env var,
+  // which silently downgrades every subsequent order email to Console.
+  const resendKey = process.env.RESEND_API_KEY;
+  const shouldSend = typeof resendKey === "string" && resendKey.length > 10;
 
-  if (!isRealEmailConfigured()) {
-    // Dev / unconfigured: skip. The console provider would still print the
-    // whole email to stdout which is noisy and unnecessary in production.
+  console.log(
+    `[order-email] trigger order=${orderNumber} shouldSend=${shouldSend} keyLen=${resendKey?.length ?? 0}`,
+  );
+
+  if (!shouldSend) {
+    console.log(`[order-email] skipped order=${orderNumber}: no RESEND_API_KEY`);
     return;
   }
+
+  const [{ ResendEmailProvider }, { orderConfirmationEmail }] = await Promise.all([
+    import("@/lib/email"),
+    import("@/lib/email/templates/order-confirmation"),
+  ]);
 
   const order = await prisma.order.findUnique({
     where: { number: orderNumber },
@@ -293,10 +305,14 @@ async function sendOrderConfirmationEmail(orderNumber: string): Promise<void> {
     siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.brensta.com",
   });
 
-  const provider = getEmailProvider();
+  // Construct a fresh Resend provider from the current env, every time.
+  const provider = new ResendEmailProvider(resendKey!);
+  console.log(`[order-email] sending order=${orderNumber} to=${order.email}`);
   const r = await provider.send(message);
-  if (!r.ok) {
-    console.error(`[order-email] send failed via ${provider.name} for ${orderNumber}: ${r.reason}`);
+  if (r.ok) {
+    console.log(`[order-email] sent order=${orderNumber} providerId=${r.providerId ?? "?"}`);
+  } else {
+    console.error(`[order-email] send failed order=${orderNumber}: ${r.reason}`);
   }
 }
 
