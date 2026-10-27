@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { assertAdmin } from "@/lib/auth-helpers";
+import { assertAdmin } from "@/lib/admin/rbac";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
