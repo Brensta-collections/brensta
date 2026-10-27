@@ -1,5 +1,12 @@
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { authConfig } from "@/auth.config";
+
+// Edge-only NextAuth instance built from the SLIM auth.config.ts — no Prisma,
+// no bcrypt, no Credentials provider. Keeps the Edge middleware bundle under
+// Vercel Hobby's 1 MB limit. The full auth instance (with providers that need
+// Node runtime) lives in auth.ts and is used by API routes only.
+const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;

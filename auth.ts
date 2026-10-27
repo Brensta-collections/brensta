@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import type { UserRole } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { loginSchema } from "@/lib/validators/auth";
+import { authConfig } from "./auth.config";
 
 const providers = [];
 
@@ -46,11 +47,10 @@ if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt", maxAge: 60 * 60 * 24 * 30 },
-  pages: { signIn: "/login" },
-  trustHost: true,
+  ...authConfig,
   providers,
   callbacks: {
+    ...authConfig.callbacks,
     async signIn({ user, account }) {
       // Google first-time users: persist a User row (JWT-only strategy, no adapter)
       if (account?.provider === "google" && user.email) {
@@ -74,20 +74,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
       return true;
-    },
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = (user as { id: string }).id;
-        token.role = (user as { role: UserRole }).role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user && token.id) {
-        session.user.id = token.id;
-        session.user.role = token.role;
-      }
-      return session;
     },
   },
   events: {
