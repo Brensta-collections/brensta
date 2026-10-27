@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Instagram } from "lucide-react";
 import { getMainCategoriesWithChildren } from "@/lib/categories";
 import { Logo } from "./Logo";
 import {
@@ -32,7 +31,20 @@ export async function Footer() {
                 aria-label="Follow BRENSTA on Instagram"
                 className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-brand-line bg-white text-charcoal transition hover:border-gold hover:bg-gold hover:text-ivory"
               >
-                <Instagram className="h-5 w-5" />
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5"
+                  aria-hidden="true"
+                >
+                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                </svg>
               </a>
               <a
                 href={INSTAGRAM_URL}
