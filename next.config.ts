@@ -28,6 +28,15 @@ const nextConfig: NextConfig = {
   // We'll re-enable with explicit `"use cache"` directives + revalidate tags in M3+.
   cacheComponents: false,
   partialPrefetching: false,
+  // Cloudflare R2 serves user-uploaded images from pub-*.r2.dev. Allow those
+  // hostnames so <Image/> optimization accepts them. Hobby plan has limited
+  // image optimization quota — a plain <img src> also works and skips it.
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "*.r2.dev" },
+      { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
+    ],
+  },
   turbopack: {
     rules: {
       "*.css": {
